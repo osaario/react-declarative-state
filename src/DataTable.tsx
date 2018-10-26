@@ -9,7 +9,7 @@ const defaultPadding = 15
 export interface DatatableProps<T> {
   data: T[]
   rowHeight?: number
-  render: (
+  children: (
     data: T[],
     DataTable: {
       SearchField: (props: { placeholder: string }) => JSX.Element
@@ -36,11 +36,7 @@ export interface DatatableProps<T> {
       SortHeader: (props: SortHeaderProps<T>) => JSX.Element
     }
   ) => JSX.Element
-  renderStatic?: (data: T[]) => JSX.Element
-  renderCSV?: (data: T[]) => { [key: string]: number | string | null | undefined }[]
-  reportTitle?: string
   initialSortField: keyof T
-  pageSize: number
 }
 export interface DatatableState<T> {
   sortField: keyof T
@@ -69,7 +65,7 @@ class DataTableBody<T> extends React.PureComponent<
   state: DataTableBodyState = {
     firstIndexOnScreen: 0,
     height: 500,
-    lastIndexOnScreen: 20
+    lastIndexOnScreen: 100
   }
   onScroll = (e: any) => {
     const target: any = e.currentTarget
@@ -83,24 +79,6 @@ class DataTableBody<T> extends React.PureComponent<
   }
   render() {
     console.log('render dtablebody')
-    const firstBlockH = Math.max(this.props.rowHeight! * this.state.firstIndexOnScreen, 0)
-    const lastBlockH = Math.max(
-      this.props.rowHeight! * (this.props.data.length - this.state.lastIndexOnScreen),
-      0
-    )
-    const trueHeigth =
-      firstBlockH +
-      lastBlockH +
-      (this.state.lastIndexOnScreen - this.state.firstIndexOnScreen) * this.props.rowHeight!
-    const fullHeigth = this.props.rowHeight! * this.props.data.length
-    /*
-    console.log({
-      fullHeigth,
-      trueHeigth
-    }) */
-    if (fullHeigth !== trueHeigth) {
-      throw Error('different heights')
-    }
     const innerHeight = window.innerHeight
     console.log({ innerHeight })
     return (
@@ -165,7 +143,7 @@ class DataTableBody<T> extends React.PureComponent<
   }
 }
 
-export class Datatable<T> extends React.PureComponent<DatatableProps<T>, DatatableState<T>> {
+export class DataTable<T> extends React.PureComponent<DatatableProps<T>, DatatableState<T>> {
   generatePdfSubject = new Subject()
   subscriptions: Subscription[] = []
   state: DatatableState<T> = {
@@ -297,7 +275,6 @@ export class Datatable<T> extends React.PureComponent<DatatableProps<T>, Datatab
       sortedData = _.sortBy(sortedData, this.state.sortField)
     }
     sortedData = this.state.sortDirection === 'asc' ? sortedData : _.reverse(sortedData)
-    sortedData = _.take(sortedData, this.props.pageSize)
     // console.log(sortedData)
     this.setState({
       sortedData
@@ -312,7 +289,7 @@ export class Datatable<T> extends React.PureComponent<DatatableProps<T>, Datatab
   render() {
     const data = this.state.sortedData
     console.log('render dtable')
-    return this.props.render(data, {
+    return this.props.children(data, {
       Table: this.Table,
       TBody: this.TBody,
       THead: this.THead,

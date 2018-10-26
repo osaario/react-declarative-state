@@ -20,6 +20,21 @@ export class ProgressButton extends React.PureComponent<ProgressButtonProps> {
     isSuccess = this.props.progress === Async.Progress.Done
     isProgressing = this.props.progress === Async.Progress.Progressing
     isError = this.props.progress === Async.Progress.Error
+    let title = ''
+    switch (this.props.asyncDataType) {
+      case Async.Type.Create: {
+        title = 'Create new'
+        break
+      }
+      case Async.Type.Delete: {
+        title = 'Delete'
+        break
+      }
+      default: {
+        title = 'Save'
+        break
+      }
+    }
     return (
       <button
         {..._.omit(
@@ -45,7 +60,7 @@ export class ProgressButton extends React.PureComponent<ProgressButtonProps> {
           }
         }}
       >
-        Click me
+        {title}
       </button>
     )
   }
