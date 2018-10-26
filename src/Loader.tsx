@@ -2,9 +2,9 @@ import React, { CSSProperties } from 'react'
 import _ from 'lodash'
 import { Observable, Subscription, Subject } from 'rxjs'
 import { Async } from './Async'
-import ProgressContainer from './ProgressContainer'
-import ErrorAlert from './ErrorAlert'
-import StupidProgressBar from './StupidProgressBar'
+import { ProgressContainer } from './ProgressContainer'
+import { ErrorAlert } from './ErrorAlert'
+import { ProgressBar } from './ProgressBar'
 
 interface LoaderSharedProps {
   approxMS?: number
@@ -38,7 +38,7 @@ function renderNoData(state: Async.State, props: LoaderSharedProps & { lang: str
               : {}
         }
       >
-        <StupidProgressBar />
+        <ProgressBar />
       </div>
     )
   } else {

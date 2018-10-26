@@ -1,4 +1,4 @@
-import React from "react"
+import React from 'react'
 
 export type TabbedProps<T> = {
   options: T[]
@@ -12,7 +12,7 @@ export type TabbedState<T> = {
   tab: T
 }
 
-export default class Tabbed<T> extends React.Component<TabbedProps<T>, TabbedState<T>> {
+export class Tabbed<T> extends React.Component<TabbedProps<T>, TabbedState<T>> {
   state: TabbedState<T> = {
     tab: this.props.options[0]
   }

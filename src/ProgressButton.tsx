@@ -1,7 +1,6 @@
 import React from 'react'
 import _ from 'lodash'
 import { Async } from './Async'
-declare var swal: any
 
 export interface ProgressButtonProps
   extends React.DetailedHTMLProps<
@@ -12,9 +11,7 @@ export interface ProgressButtonProps
   progress: Async.Progress
 }
 
-export default class ProgressButton extends React.PureComponent<
-  ProgressButtonProps & { lang: string }
-> {
+export class ProgressButton extends React.PureComponent<ProgressButtonProps & { lang: string }> {
   render() {
     let isSuccess = false
     let isProgressing = false

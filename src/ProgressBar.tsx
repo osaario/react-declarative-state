@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default class ProgressBar extends React.PureComponent {
+export class ProgressBar extends React.PureComponent {
   render() {
     const props = {
       ...this.props,

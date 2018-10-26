@@ -183,10 +183,7 @@ class DataTableBody<T> extends React.PureComponent<
   }
 }
 
-export default class Datatable<T> extends React.PureComponent<
-  DatatableProps<T>,
-  DatatableState<T>
-> {
+export class Datatable<T> extends React.PureComponent<DatatableProps<T>, DatatableState<T>> {
   generatePdfSubject = new Subject()
   subscriptions: Subscription[] = []
   state: DatatableState<T> = {

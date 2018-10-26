@@ -5,7 +5,7 @@ export interface ProgressContainerProps
   progressing: boolean
   opaque?: boolean
 }
-export default class ProgressContainer extends React.Component<ProgressContainerProps> {
+export class ProgressContainer extends React.Component<ProgressContainerProps> {
   render() {
     return (
       <div

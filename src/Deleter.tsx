@@ -2,7 +2,7 @@ import React from 'react'
 import _ from 'lodash'
 import { Observable, Subscription, Subject } from 'rxjs'
 import { Async } from './Async'
-import ProgressContainer from './ProgressContainer'
+import { ProgressContainer } from './ProgressContainer'
 
 export interface DeleterProps<T> {
   onDone: (id: string) => void

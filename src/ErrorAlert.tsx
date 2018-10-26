@@ -2,7 +2,7 @@ import React from 'react'
 import _ from 'lodash'
 import { Async } from './Async'
 
-export default class ErrorAlert extends React.Component<{
+export class ErrorAlert extends React.Component<{
   asyncState: Async.State | Async.State[]
   lang: string
 }> {

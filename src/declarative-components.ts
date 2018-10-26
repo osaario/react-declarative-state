@@ -5,7 +5,7 @@ export * from './Deleter'
 export * from './ErrorAlert'
 export * from './Loader'
 export * from './ProgressContainer'
-export * from './StupidProgressBar'
+export * from './ProgressBar'
 export * from './Tabbed'
 export * from './Updater'
 
