@@ -6,6 +6,6 @@ export default class ProgressBar extends React.PureComponent {
       ...this.props,
       approxSec: undefined
     }
-    return <div>This is supposed to be a progressbar...</div>
+    return <div>This is supposed to be a progressbar..</div>
   }
 }
