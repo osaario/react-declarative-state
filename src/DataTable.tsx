@@ -2,8 +2,6 @@ import React from 'react'
 import _ from 'lodash'
 import { Subject, Subscription } from 'rxjs'
 import ReactDOM from 'react-dom'
-//import { findDOMNode } from "react-dom"
-// import moment from "moment"
 
 const defaultRowsBefore = 15
 const defaultPadding = 15
@@ -63,15 +61,6 @@ interface DataTableBodyState {
   lastIndexOnScreen: number
 }
 
-/*
-.datatable thead,
-tbody td {
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-*/
-
 class DataTableBody<T> extends React.PureComponent<
   { data: T[]; rowHeight: number; children: (data: T) => JSX.Element },
   DataTableBodyState
@@ -109,7 +98,9 @@ class DataTableBody<T> extends React.PureComponent<
       fullHeigth,
       trueHeigth
     }) */
-    if (fullHeigth !== trueHeigth) throw Error('different heights')
+    if (fullHeigth !== trueHeigth) {
+      throw Error('different heights')
+    }
     const innerHeight = window.innerHeight
     console.log({ innerHeight })
     return (
@@ -132,31 +123,22 @@ class DataTableBody<T> extends React.PureComponent<
             return before ? 'b' : after ? 'a' : 'v'
           })
           .map((d, key) => {
-            //const realIndex = this.state.firstIndexOnScreen + index
-            /*
-            let marginTop = realIndex === this.state.firstIndexOnScreen ? firstBlockH : undefined
-            let marginBottom = realIndex === this.state.lastIndexOnScreen ? lastBlockH : undefined
-            */
-            /*
-          if (index === 0) {
-            console.log({ index, realIndex, inScreen })
-          } */
             if (key === 'a') {
               const height = d.length * this.props.rowHeight
               return <div style={{ height }} />
             } else if (key === 'b') {
-              return d.map(__ => <div style={{ height: this.props.rowHeight }} />)
+              return d.map(dp => <div key={dp.idx} style={{ height: this.props.rowHeight }} />)
             } else {
-              return d.map(d => (
+              return d.map(dp => (
                 <tr
                   style={{
                     display: 'table',
                     width: '100%',
                     tableLayout: 'fixed'
                   }}
-                  key={(d as any).id}
+                  key={(dp as any).id}
                 >
-                  {this.props.children(d.data)}
+                  {this.props.children(dp.data)}
                 </tr>
               ))
             }

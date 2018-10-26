@@ -11,7 +11,7 @@ export interface ProgressButtonProps
   progress: Async.Progress
 }
 
-export class ProgressButton extends React.PureComponent<ProgressButtonProps & { lang: string }> {
+export class ProgressButton extends React.PureComponent<ProgressButtonProps> {
   render() {
     let isSuccess = false
     let isProgressing = false
@@ -20,7 +20,6 @@ export class ProgressButton extends React.PureComponent<ProgressButtonProps & { 
     isSuccess = this.props.progress === Async.Progress.Done
     isProgressing = this.props.progress === Async.Progress.Progressing
     isError = this.props.progress === Async.Progress.Error
-    //console.log(normalText, errorText, loadingText, successText)
     return (
       <button
         {..._.omit(
@@ -45,7 +44,9 @@ export class ProgressButton extends React.PureComponent<ProgressButtonProps & { 
             if (this.props.onClick) this.props.onClick(e)
           }
         }}
-      />
+      >
+        Click me
+      </button>
     )
   }
 }
