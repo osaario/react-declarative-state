@@ -9,6 +9,7 @@ const defaultPadding = 15
 export interface DatatableProps<T> {
   data: T[]
   rowHeight?: number
+  anticipateRows?: number
   children: (
     data: T[],
     DataTable: {
@@ -58,7 +59,7 @@ interface DataTableBodyState {
 }
 
 class DataTableBody<T> extends React.PureComponent<
-  { data: T[]; rowHeight: number; children: (data: T) => JSX.Element },
+  { data: T[]; rowHeight: number; anticipateRows?: number; children: (data: T) => JSX.Element },
   DataTableBodyState
 > {
   ref = React.createRef<HTMLTableSectionElement>()
@@ -96,8 +97,10 @@ class DataTableBody<T> extends React.PureComponent<
             return { data, idx }
           })
           .groupBy(({ idx }) => {
-            const before = idx < this.state.firstIndexOnScreen - defaultRowsBefore
-            const after = idx > this.state.lastIndexOnScreen + defaultRowsBefore
+            const before =
+              idx < this.state.firstIndexOnScreen - (this.props.anticipateRows || defaultRowsBefore)
+            const after =
+              idx > this.state.lastIndexOnScreen + (this.props.anticipateRows || defaultRowsBefore)
             return before ? 'b' : after ? 'a' : 'v'
           })
           .map((d, key) => {
@@ -142,6 +145,24 @@ class DataTableBody<T> extends React.PureComponent<
 }
 
 export class DataTable<T> extends React.PureComponent<DatatableProps<T>, DatatableState<T>> {
+  static Td = (
+    props: React.DetailedHTMLProps<
+      React.TdHTMLAttributes<HTMLTableDataCellElement>,
+      HTMLTableDataCellElement
+    >
+  ) => {
+    return (
+      <td
+        {...props}
+        style={{
+          ...props.style,
+          whiteSpace: 'nowrap',
+          textOverflow: 'ellipsis',
+          overflow: 'hidden'
+        }}
+      />
+    )
+  }
   generatePdfSubject = new Subject()
   subscriptions: Subscription[] = []
   state: DatatableState<T> = {
@@ -185,6 +206,7 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
     return (
       <DataTableBody
         data={this.state.sortedData}
+        anticipateRows={this.props.anticipateRows}
         rowHeight={this.props.rowHeight!}
         children={props.children}
       />

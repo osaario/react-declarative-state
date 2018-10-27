@@ -65,4 +65,67 @@ export namespace Async {
       }
     }
   }
+  const headers = {
+    'Content-Type': 'application/json'
+  }
+
+  export function GET<T>(url: string) {
+    return Observable.fromPromise(
+      fetch(url, {
+        method: 'GET',
+        headers: { ...headers }
+      }).then(response => {
+        if (response.ok) {
+          return response.json()
+        }
+        throw Error(response.status.toString())
+      })
+    ) as Observable<T>
+  }
+
+  export function DELETE(url: string): Observable<number> {
+    return Observable.fromPromise(
+      fetch(url, {
+        method: 'DELETE',
+        headers: { ...headers }
+      }).then(response => {
+        if (response.ok) {
+          return response.status
+        }
+        throw Error(response.status.toString())
+      })
+    )
+  }
+
+  export function POST<T>(url: string, data: T) {
+    return Observable.fromPromise(
+      fetch(`url`, {
+        method: 'POST',
+        headers: { ...headers },
+        body: JSON.stringify(data)
+      }).then(response => {
+        if (response.ok) {
+          if (response.status === 204) return response.status
+          return response.json()
+        }
+        throw Error(response.status.toString())
+      })
+    )
+  }
+
+  export function PUT<T>(url: string, data: T) {
+    return Observable.fromPromise(
+      fetch(url, {
+        method: 'PUT',
+        headers: { ...headers },
+        body: JSON.stringify(data)
+      }).then(response => {
+        if (response.ok) {
+          if (response.status === 204) return response.status
+          return response.json()
+        }
+        throw Error(response.status.toString())
+      })
+    )
+  }
 }
