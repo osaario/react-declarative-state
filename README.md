@@ -8,31 +8,41 @@ Library boilerplate starter: https://github.com/alexjoverm/typescript-library-st
 
 ## Dependencies
 
-##Examples
+## Examples
 
 ### DataTable
 
 ```
-<DataTable data={data} initialSortField={"first_name"}>
-{(data, { Table, THead, TBody, SortHeader }) => {
+<DataTable data={data} rowHeight={18} initialSortField={"first_name"}>
+  {(__, { THead, TBody, SortHeader }) => {
     return (
-    <Fragment>
+      <Fragment>
         <THead>
-        <tr>
-            <SortHeader field="first_name">First name</SortHeader>
-            <SortHeader field="last_name">Last name</SortHeader>
-        </tr>
+          <tr>
+            <SortHeader style={{ textAlign: "left" }} field="first_name">
+              First name
+            </SortHeader>
+            <SortHeader style={{ textAlign: "left" }} field="last_name">
+              Last name
+            </SortHeader>
+            <SortHeader style={{ textAlign: "left" }} field="email">
+              Email
+            </SortHeader>
+            <SortHeader field="gender">Gender</SortHeader>
+          </tr>
         </THead>
         <TBody>
-        {person => (
+          {person => (
             <Fragment>
-            <td>{person.first_name}</td>
-            <td>{person.last_name}</td>
+              <td>{person.first_name}</td>
+              <td>{person.last_name}</td>
+              <td>{person.email}</td>
+              <td style={{ textAlign: "center" }}>{person.gender}</td>
             </Fragment>
-        )}
+          )}
         </TBody>
-    </Fragment>
+      </Fragment>
     )
-}}
+  }}
 </DataTable>
 ```
