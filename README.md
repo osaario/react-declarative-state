@@ -26,7 +26,7 @@ interface Photo {
   thumbnailUrl: string
 }
 
-class App extends React.Component<{}, { lastTouch: boolean; wrapped: any }> {
+class App extends React.Component {
   public render() {
     return (
       <Loader
@@ -110,7 +110,7 @@ interface Post {
   body: string
 }
 
-class App extends React.Component<{}, { lastTouch: boolean; wrapped: any }> {
+class App extends React.Component {
   public render() {
     return (
       <Loader
