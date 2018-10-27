@@ -101,11 +101,9 @@ class DataTableBody<T> extends React.PureComponent<
             return before ? 'b' : after ? 'a' : 'v'
           })
           .map((d, key) => {
-            if (key === 'a') {
+            if (key === 'a' || key === 'b') {
               const height = d.length * this.props.rowHeight
-              return <div style={{ height }} />
-            } else if (key === 'b') {
-              return d.map(dp => <div key={dp.idx} style={{ height: this.props.rowHeight }} />)
+              return <div key={key} style={{ height }} />
             } else {
               return d.map(dp => (
                 <tr
@@ -114,7 +112,7 @@ class DataTableBody<T> extends React.PureComponent<
                     width: '100%',
                     tableLayout: 'fixed'
                   }}
-                  key={(dp as any).id}
+                  key={(dp as any).idx}
                 >
                   {this.props.children(dp.data)}
                 </tr>
