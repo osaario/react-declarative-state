@@ -1,6 +1,6 @@
-# Declarative TSX
+# Declarative Components
 
-Declarative TSX components developed for Timma SaaS client codebase
+Declarative JSX components developed for Timma SaaS client codebase
 
 ## Acknowledgements
 
