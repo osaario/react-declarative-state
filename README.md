@@ -15,11 +15,7 @@ Library boilerplate starter: https://github.com/alexjoverm/typescript-library-st
 ```
 import React, { Fragment } from "react"
 
-import { DataTable } from "./declarative-components/src/DataTable"
-import { Selecter } from "./declarative-components/src/Tabbed"
-import { Loader } from "./declarative-components/src/Loader"
-import { Async } from "./declarative-components/src/Async"
-
+import { DataTable, Selecter, Loader, Async } from "declarative-components"
 const colors = ["red", "green", "blue", "yellow"] as ("red" | "green" | "blue" | "yellow")[]
 
 interface Photo {
