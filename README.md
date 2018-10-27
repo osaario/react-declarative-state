@@ -93,3 +93,68 @@ class App extends React.Component<{}, { lastTouch: boolean; wrapped: any }> {
   }
 }
 ```
+
+### Form
+
+```
+import React, { Fragment } from "react"
+
+import { Loader } from "./declarative-components/src/Loader"
+import { Async } from "./declarative-components/src/Async"
+import { Form } from "./declarative-components/src/Form"
+
+interface Post {
+  userId: number
+  id: number
+  title: string
+  body: string
+}
+
+class App extends React.Component<{}, { lastTouch: boolean; wrapped: any }> {
+  public render() {
+    return (
+      <Loader
+        operation={() => {
+          return Async.GET<Post>("https://jsonplaceholder.typicode.com/posts/1")
+        }}
+      >
+        {initialPost => (
+          <Form
+            initialValue={initialPost}
+            onSubmit={() => {
+              alert("Submitted")
+            }}
+          >
+            {({ Root, SubmitButton }) => (
+              <Fragment>
+                <Root>
+                  {(post, __, { FormGroup, FormControl, HelpBlock }) => (
+                    <Fragment>
+                      <FormGroup name="id">
+                        <label>Id</label>
+                        <FormControl name="id" />
+                        <HelpBlock name="id" />
+                      </FormGroup>
+                      <FormGroup name="title">
+                        <label>Title</label>
+                        <FormControl notEmpty={true} name="title" />
+                        <HelpBlock name="title" />
+                      </FormGroup>
+                      <FormGroup name="body">
+                        <label>Body</label>
+                        <FormControl name="body" />
+                        <HelpBlock name="body" />
+                      </FormGroup>
+                    </Fragment>
+                  )}
+                </Root>
+                <SubmitButton asyncDataType={Async.Type.Update} progress={Async.Progress.Normal} />
+              </Fragment>
+            )}
+          </Form>
+        )}
+      </Loader>
+    )
+  }
+}
+```
