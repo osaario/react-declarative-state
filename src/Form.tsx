@@ -23,6 +23,14 @@ export type FormGroupProps<T> = React.DetailedHTMLProps<
 > & {
   name: keyof T
 }
+export type TextAreaProps<T> = _.Omit<
+  React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>,
+  'ref'
+> &
+  ValidationRules & {
+    name: keyof T
+    value?: number | string | boolean
+  }
 export type InputProps<T> = _.Omit<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
   'ref'
@@ -50,6 +58,7 @@ export interface FormScopeSharedPublicProps<T> {
         props: FormSubScopePublicProps<T, B> & FormScopeSharedPublicProps<T[B]>
       ) => JSX.Element | null
       Input: (props: InputProps<T>) => JSX.Element
+      TextArea: (props: TextAreaProps<T>) => JSX.Element
       FormGroup: (props: FormGroupProps<T>) => JSX.Element
       ErrorLabel: (props: ErrorLabelProps<T>) => JSX.Element | null
     }
@@ -94,14 +103,32 @@ export interface FormProps<T>
 }
 
 class InputInner extends React.Component<
-  React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & {
-    onDidMount: (ref: React.RefObject<HTMLInputElement>) => void
+  React.DetailedHTMLProps<
+    React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement>,
+    HTMLInputElement | HTMLTextAreaElement
+  > & {
+    onDidMount: (ref: React.RefObject<any>) => void
     onWillUnmount: () => void
+    _textArea: boolean
   }
 > {
-  ref = React.createRef<HTMLInputElement>()
+  ref = React.createRef<any>()
   render() {
-    return <input ref={this.ref} {..._.omit(this.props, ['onDidMount', 'onWillUnmount'])} />
+    if (this.props._textArea) {
+      return (
+        <textarea
+          ref={this.ref as any}
+          {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea'])}
+        />
+      )
+    } else {
+      return (
+        <input
+          ref={this.ref as any}
+          {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea'])}
+        />
+      )
+    }
   }
   componentDidMount() {
     this.props.onDidMount(this.ref)
@@ -184,6 +211,9 @@ export class FormScope<T, S extends keyof T> extends React.Component<
     const validation = this.getValidationForField(this.getLensPathForField(props.name))
     return <div {...props} style={{ ...props.style, color: validation ? 'red' : undefined }} />
   }
+  TextArea = (props: TextAreaProps<T[S]>) => {
+    return this.Input({ ...props, _textArea: true } as any)
+  }
   Input = (props: InputProps<T[S]>) => {
     const rules = _.pick(props, _.keys(formRules)) as ValidationRules
     const lensPath = this.getLensPathForField(props.name)
@@ -196,6 +226,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
       <InputInner
         onChange={this.riggedOnChange}
         value={value}
+        _textArea={(props as any)._textArea}
         {..._.omit(_.omit(props, 'ref'), _.keys(formRules))}
         key={JSON.stringify(lensPath) + JSON.stringify(rules)}
         onDidMount={ref => {
@@ -272,6 +303,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
           this.riggedOnChange,
           {
             Input: this.Input,
+            TextArea: this.TextArea,
             FormGroup: this.FormGroup,
             ErrorLabel: this.ErrorLabel,
             Sub: this.Sub
