@@ -12,7 +12,7 @@ Library boilerplate starter: https://github.com/alexjoverm/typescript-library-st
 
 ### DataTable
 
-```
+```typescript
 import React, { Fragment } from "react"
 
 import { DataTable, Sync, Async } from "declarative-components"
@@ -113,7 +113,7 @@ class App extends React.Component {
 
 ### Form
 
-```
+```typescript
 import React, { Fragment } from "react"
 import { Form, Async, Sync } from "declarative-components"
 
