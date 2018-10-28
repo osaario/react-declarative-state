@@ -149,9 +149,7 @@ export namespace Async {
     }
     render() {
       if (!this.state.value.data) {
-        return (
-          this.props.placeholder && this.props.placeholder(this.state.value.state.progress as any)
-        )
+        return this.props.placeholder && this.props.placeholder(this.state.value.state.progress as any)
       }
       return this.props.children(this.state.value.data, this.state.value.state.progress)
     }
@@ -159,6 +157,11 @@ export namespace Async {
       this.subscriptions.forEach(s => {
         s.unsubscribe()
       })
+    }
+    componentDidUpdate(prevProps: ConstProps<T>) {
+      if (prevProps.value !== this.props.value) {
+        throw Error('Const component cant change value')
+      }
     }
     componentDidMount() {
       this.subscriptions.push(
@@ -189,6 +192,7 @@ export namespace Async {
   export interface VarProps<T> {
     setter: (value: T | null) => { operation: Observable<T | null>; type: Async.Type }
     value: Observable<T>
+    onChange?: (value: T | null) => void
     placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
     children: (data: T, asyncState: Async.State, setValue: (value: T | null) => void) => JSX.Element
   }
@@ -281,13 +285,18 @@ export namespace Async {
         .filter(x => !!x)
       this.subscriptions.push(
         submitObs.subscribe(value => {
-          this.setState({
-            value,
-            asyncState: {
-              progress: Async.Progress.Normal,
-              type: Async.Type.Load
+          this.setState(
+            {
+              value,
+              asyncState: {
+                progress: Async.Progress.Normal,
+                type: Async.Type.Load
+              }
+            },
+            () => {
+              if (this.props.onChange) this.props.onChange(value)
             }
-          })
+          )
         })
       )
     }

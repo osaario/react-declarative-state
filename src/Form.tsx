@@ -11,10 +11,7 @@ type ValidationRules = {
     : (typeof formRules)[P] extends ValidationRuleType<number> ? number : string
 }
 
-export type ErrorLabelProps<T> = React.DetailedHTMLProps<
-  React.InputHTMLAttributes<HTMLDivElement>,
-  HTMLDivElement
-> & {
+export type ErrorLabelProps<T> = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLDivElement>, HTMLDivElement> & {
   name: keyof T
 }
 export type ValidatedProps<T> = {
@@ -64,19 +61,13 @@ export interface FormScopeSharedPublicProps<T> {
 
 type LensPathType = (string | number)[]
 
-type FormEventType<T> = T extends Array<infer G>
-  ? { [K in keyof G]?: G[K] }[]
-  : { [K in keyof T]?: T[K] }
+type FormEventType<T> = T extends Array<infer G> ? { [K in keyof G]?: G[K] }[] : { [K in keyof T]?: T[K] }
 
 export interface FormScopePrivateProps<T> {
   rootValue: T
   value: any
   onChange: (e: any) => void
-  onInsertRule: (
-    lensPath: LensPathType,
-    rule: ValidationRules,
-    ref: React.RefObject<HTMLInputElement>
-  ) => void
+  onInsertRule: (lensPath: LensPathType, rule: ValidationRules, ref: React.RefObject<HTMLInputElement>) => void
   onRemoveRule: (lensPath: LensPathType) => void
   touchField: (lensPath: LensPathType) => void
   unTouchField: (lensPath: LensPathType) => void
@@ -84,12 +75,9 @@ export interface FormScopePrivateProps<T> {
 }
 
 export interface FormProps<T>
-  extends _.Omit<
-      React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>,
-      'onSubmit'
-    > {
-  initialValue: T
-  onSubmit: (data: T) => void
+  extends _.Omit<React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>, 'onChange'> {
+  value: T
+  onChange: (data: T) => void
   allowUndefinedPaths?: boolean
   children: (
     Form: {
@@ -112,19 +100,9 @@ class InputInner extends React.Component<
   ref = React.createRef<any>()
   render() {
     if (this.props._textArea) {
-      return (
-        <textarea
-          ref={this.ref as any}
-          {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea'])}
-        />
-      )
+      return <textarea ref={this.ref as any} {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea'])} />
     } else {
-      return (
-        <input
-          ref={this.ref as any}
-          {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea'])}
-        />
-      )
+      return <input ref={this.ref as any} {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea'])} />
     }
   }
   componentDidMount() {
@@ -152,11 +130,7 @@ function getValidationFromRules(rules: any, value: any) {
 export class FormScope<T, S extends keyof T> extends React.Component<
   FormScopeSharedPublicProps<T[S]> & FormScopePrivateProps<T> & FormSubScopePublicProps<T, S>
 > {
-  constructor(
-    props: FormScopeSharedPublicProps<T[S]> &
-      FormScopePrivateProps<T> &
-      FormSubScopePublicProps<T, S>
-  ) {
+  constructor(props: FormScopeSharedPublicProps<T[S]> & FormScopePrivateProps<T> & FormSubScopePublicProps<T, S>) {
     super(props)
   }
   shouldComponentUpdate(nextProps: FormScopePrivateProps<T> & FormSubScopePublicProps<T, S>) {
@@ -257,8 +231,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
 
       const rigged = {
         data: {
-          [event.target.name]:
-            event.target.type === 'checkbox' ? event.target.checked : event.target.value
+          [event.target.name]: event.target.type === 'checkbox' ? event.target.checked : event.target.value
         },
         rootLens: this.props.lensPathToRoot.concat([this.props.scope as any])
       }
@@ -327,7 +300,7 @@ const wrappedValues = L.compose(
 export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   state: FormState<T> = {
     // no pricings yet registered so lets just cast this
-    value: L.modify(L.leafs, wrapValue, this.props.initialValue)
+    value: L.modify(L.leafs, wrapValue, this.props.value)
   }
   SubmitButton = (props: ProgressButtonProps) => {
     /*
@@ -368,11 +341,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       return L.remove([lensPath, 'rules', L.optional], state)
     })
   }
-  insertRule = (
-    lensPath: LensPathType,
-    rule: ValidationRules,
-    ref: React.RefObject<HTMLInputElement>
-  ) => {
+  insertRule = (lensPath: LensPathType, rule: ValidationRules, ref: React.RefObject<HTMLInputElement>) => {
     /* TODO Check that the path exists or else throw Error */
     if (!L.isDefined(lensPath)) {
       throw Error('Lens path does not exits in insertRule: ' + lensPath.toString())
@@ -434,11 +403,12 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     })
   }
   componentDidUpdate(prevProps: any) {
-    if (
-      prevProps.initialValue !== this.props.initialValue &&
-      JSON.stringify(prevProps.initialValue) !== JSON.stringify(this.props.initialValue)
-    ) {
+    if (prevProps.value !== this.props.value && JSON.stringify(prevProps.value) !== JSON.stringify(this.props.value)) {
       // Do a JSON parse to check this
+      this.setState({
+        value: L.modify(L.leafs, wrapValue, this.props.value)
+      })
+
       throw Error('Form changed its initial value, this is not allowed')
     }
   }
@@ -446,7 +416,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     const props = _.omit(this.props, ['value', 'onChange'])
     return (
       <form
-        {..._.omit(props, ['initialValue', 'allowUndefinedPaths']) as any}
+        {..._.omit(props, ['value', 'allowUndefinedPaths']) as any}
         onSubmit={(e: any) => {
           e.preventDefault()
           e.stopPropagation()
@@ -468,7 +438,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
               }
             )
           } else {
-            this.props.onSubmit(L.modify(wrappedValues, unWrapValue, this.state.value))
+            this.props.onChange(L.modify(wrappedValues, unWrapValue, this.state.value))
           }
         }}
       >
