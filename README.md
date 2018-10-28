@@ -98,7 +98,7 @@ class App extends React.Component {
 
 ```
 import React, { Fragment } from "react"
-import { Form, Loader, Async, Value } from "declarative-components"
+import { Form, Loader, Async, Variable } from "declarative-components"
 
 interface Post {
   userId: number
@@ -116,7 +116,7 @@ class App extends React.Component {
         }}
       >
         {initialPost => (
-          <Value initialValue={5}>
+          <Variable initialValue={5}>
             {(minLength, setMinLength) => (
               <Fragment>
                 <p>
@@ -164,7 +164,7 @@ class App extends React.Component {
                 </Form>
               </Fragment>
             )}
-          </Value>
+          </Variable>
         )}
       </Loader>
     )
