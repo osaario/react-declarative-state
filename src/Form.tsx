@@ -17,11 +17,9 @@ export type ErrorLabelProps<T> = React.DetailedHTMLProps<
 > & {
   name: keyof T
 }
-export type FormGroupProps<T> = React.DetailedHTMLProps<
-  React.InputHTMLAttributes<HTMLDivElement>,
-  HTMLDivElement
-> & {
+export type ValidatedProps<T> = {
   name: keyof T
+  children: (validation: Validation | null) => JSX.Element
 }
 export type TextAreaProps<T> = _.Omit<
   React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>,
@@ -57,7 +55,7 @@ export interface FormScopeSharedPublicProps<T> {
       ) => JSX.Element | null
       Input: (props: InputProps<T>) => JSX.Element
       TextArea: (props: TextAreaProps<T>) => JSX.Element
-      FormGroup: (props: FormGroupProps<T>) => JSX.Element
+      Validated: (props: ValidatedProps<T>) => JSX.Element
       ErrorLabel: (props: ErrorLabelProps<T>) => JSX.Element | null
     },
     value: T,
@@ -207,9 +205,9 @@ export class FormScope<T, S extends keyof T> extends React.Component<
       />
     )
   }
-  FormGroup = (props: FormGroupProps<T[S]>) => {
+  Validated = (props: ValidatedProps<T[S]>) => {
     const validation = this.getValidationForField(this.getLensPathForField(props.name))
-    return <div {...props} style={{ ...props.style, color: validation ? 'red' : undefined }} />
+    return props.children(validation)
   }
   TextArea = (props: TextAreaProps<T[S]>) => {
     return this.Input({ ...props, _textArea: true } as any)
@@ -302,7 +300,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
           {
             Input: this.Input,
             TextArea: this.TextArea,
-            FormGroup: this.FormGroup,
+            Validated: this.Validated,
             ErrorLabel: this.ErrorLabel,
             Sub: this.Sub
           },
