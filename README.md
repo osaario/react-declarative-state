@@ -98,7 +98,7 @@ class App extends React.Component {
 
 ```
 import React, { Fragment } from "react"
-import { Form, Loader, Async } from "declarative-components"
+import { Form, Loader, Async, Value } from "declarative-components"
 
 interface Post {
   userId: number
@@ -116,39 +116,55 @@ class App extends React.Component {
         }}
       >
         {initialPost => (
-          <Form
-            initialValue={initialPost}
-            onSubmit={() => {
-              alert("Submitted")
-            }}
-          >
-            {({ Root, SubmitButton }) => (
+          <Value initialValue={5}>
+            {(minLength, setMinLength) => (
               <Fragment>
-                <Root>
-                  {(___, __, { FormGroup, Input, TextArea, ErrorLabel }) => (
+                <p>
+                  <label>Set min length</label>
+                  <input
+                    type="number"
+                    value={minLength}
+                    onChange={(e: any) => {
+                      setMinLength(e.target.value)
+                    }}
+                  />
+                </p>
+                <Form
+                  initialValue={initialPost}
+                  onSubmit={() => {
+                    alert("Submitted")
+                  }}
+                >
+                  {({ Root, SubmitButton }) => (
                     <Fragment>
-                      <FormGroup name="id">
-                        <label>Id</label>
-                        <Input name="id" />
-                        <ErrorLabel name="id" />
-                      </FormGroup>
-                      <FormGroup name="title">
-                        <label>Title</label>
-                        <Input notEmpty={true} name="title" />
-                        <ErrorLabel name="title" />
-                      </FormGroup>
-                      <FormGroup name="body">
-                        <label>Body</label>
-                        <TextArea notEmpty={true} rows={5} name="body" />
-                        <ErrorLabel name="body" />
-                      </FormGroup>
+                      <Root>
+                        {({ FormGroup, Input, TextArea, ErrorLabel }) => (
+                          <Fragment>
+                            <FormGroup name="id">
+                              <label>Id</label>
+                              <Input name="id" />
+                              <ErrorLabel name="id" />
+                            </FormGroup>
+                            <FormGroup name="title">
+                              <label>Title</label>
+                              <Input notEmpty={true} minLength={minLength} name="title" />
+                              <ErrorLabel name="title" />
+                            </FormGroup>
+                            <FormGroup name="body">
+                              <label>Body</label>
+                              <TextArea notEmpty={true} rows={5} name="body" />
+                              <ErrorLabel name="body" />
+                            </FormGroup>
+                          </Fragment>
+                        )}
+                      </Root>
+                      <SubmitButton asyncDataType={Async.Type.Update} progress={Async.Progress.Normal} />
                     </Fragment>
                   )}
-                </Root>
-                <SubmitButton asyncDataType={Async.Type.Update} progress={Async.Progress.Normal} />
+                </Form>
               </Fragment>
             )}
-          </Form>
+          </Value>
         )}
       </Loader>
     )

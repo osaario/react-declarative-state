@@ -51,9 +51,7 @@ const unWrapValue = (wrapped: any) => {
 export interface FormScopeSharedPublicProps<T> {
   optimized?: boolean
   children: (
-    value: T,
-    handleFieldChange: (e: FormEventType<T>) => void,
-    Form: {
+    Scope: {
       Sub: <B extends keyof T>(
         props: FormSubScopePublicProps<T, B> & FormScopeSharedPublicProps<T[B]>
       ) => JSX.Element | null
@@ -61,7 +59,9 @@ export interface FormScopeSharedPublicProps<T> {
       TextArea: (props: TextAreaProps<T>) => JSX.Element
       FormGroup: (props: FormGroupProps<T>) => JSX.Element
       ErrorLabel: (props: ErrorLabelProps<T>) => JSX.Element | null
-    }
+    },
+    value: T,
+    handleFieldChange: (e: FormEventType<T>) => void
   ) => JSX.Element | null
 }
 
@@ -299,15 +299,15 @@ export class FormScope<T, S extends keyof T> extends React.Component<
     return (
       <React.Fragment>
         {this.props.children(
-          L.modify(wrappedValues, unWrapValue, this.props.rootValue[this.props.scope]),
-          this.riggedOnChange,
           {
             Input: this.Input,
             TextArea: this.TextArea,
             FormGroup: this.FormGroup,
             ErrorLabel: this.ErrorLabel,
             Sub: this.Sub
-          }
+          },
+          L.modify(wrappedValues, unWrapValue, this.props.rootValue[this.props.scope]),
+          this.riggedOnChange
         )}
       </React.Fragment>
     )
