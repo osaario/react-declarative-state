@@ -37,9 +37,7 @@ class App extends React.Component {
             return <div style={{ color: "red" }}>Error happened</div>
           }
         }}
-        value={() => {
-          return Async.GET<Photo[]>("https://jsonplaceholder.typicode.com/photos")
-        }}
+        value={Async.GET<Photo[]>("https://jsonplaceholder.typicode.com/photos")}
       >
         {photos => (
           <Sync.Var initialValue={colors[0]}>
@@ -113,6 +111,8 @@ class App extends React.Component {
 
 ### Form
 
+Form is a controlled component that calls onChange on every form submit.
+
 ```JSX
 import React, { Fragment } from "react"
 import { Form, Async, Sync } from "declarative-components"
@@ -127,80 +127,108 @@ interface Post {
 class App extends React.Component {
   public render() {
     return (
-      <Async.Const
-        placeholder={progress => {
-          if (progress === Async.Progress.Progressing) {
-            return <div>Progressing...</div>
-          } else {
-            return <div style={{ color: "red" }}>Error happened</div>
-          }
-        }}
-        value={() => {
-          return Async.GET<Post>("https://jsonplaceholder.typicode.com/posts/1")
-        }}
-      >
-        {initialPost => (
-          <Sync.Var initialValue={5}>
-            {(minLength, setMinLength) => (
-              <Fragment>
-                <p>
-                  <label>Set min length</label>
-                  <input
-                    type="number"
-                    value={minLength}
-                    onChange={(e: any) => {
-                      setMinLength(e.target.value)
-                    }}
-                  />
-                </p>
-                <Form
-                  initialValue={initialPost}
-                  onSubmit={() => {
-                    alert("Submitted")
-                  }}
-                >
-                  {({ Root, SubmitButton }) => (
-                    <Fragment>
-                      <Root>
-                        {({ Validated, Input, TextArea }) => (
-                          <Fragment>
-                            <div>
-                              <label>Id</label>
-                              <Input name="id" />
-                            </div>
-                            <Validated name="title">
-                              {validation => (
-                                <div style={{ color: validation ? "red" : undefined }}>
-                                  <label>Title</label>
-                                  <Input notEmpty={true} minLength={minLength} name="title" />
-                                  {validation && (
-                                    <span>
-                                      Violates rule: {validation.ruleName} {validation.ruleValue.toString()}
-                                    </span>
+      <Sync.Guard initialValue={"edit" as "edit" | "done"}>
+        {(Tab, setValue) => (
+          <Fragment>
+            <Tab name="edit">
+              <Async.Var
+                onChange={() => {
+                  setTimeout(() => {
+                    setValue("done")
+                  }, 2000)
+                }}
+                placeholder={progress => {
+                  if (progress === Async.Progress.Progressing) {
+                    return <div>Loading...</div>
+                  } else {
+                    return <div style={{ color: "red" }}>Error happened</div>
+                  }
+                }}
+                setter={value => {
+                  if (value) {
+                    return {
+                      operation: Async.PUT<Async.Model.Incomplete<Post>>(
+                        "https://jsonplaceholder.typicode.com/posts/1",
+                        value
+                      ),
+                      type: Async.Type.Update
+                    }
+                  } else {
+                    return {
+                      operation: Async.DELETE(`https://jsonplaceholder.typicode.com/posts/1`),
+                      type: Async.Type.Delete
+                    }
+                  }
+                }}
+                initialValue={Async.GET<Post>("https://jsonplaceholder.typicode.com/posts/1")}
+              >
+                {(post, asyncState, setValue) => (
+                  <p style={{ opacity: asyncState.progress === Async.Progress.Progressing ? 0.5 : 1 }}>
+                    <Sync.Var initialValue={5}>
+                      {(minLength, setMinLength) => (
+                        <Fragment>
+                          <p>
+                            <label>Set min length</label>
+                            <input
+                              type="number"
+                              value={minLength}
+                              onChange={(e: any) => {
+                                setMinLength(e.target.value)
+                              }}
+                            />
+                          </p>
+                          <Form
+                            value={post}
+                            onChange={value => {
+                              setValue(value)
+                            }}
+                          >
+                            {({ Root, SubmitButton }) => (
+                              <Fragment>
+                                <Root>
+                                  {({ Validated, Input, TextArea }) => (
+                                    <Fragment>
+                                      <Validated name="title">
+                                        {validation => (
+                                          <div style={{ color: validation ? "red" : undefined }}>
+                                            <label>Title</label>
+                                            <Input notEmpty={true} minLength={minLength} name="title" />
+                                            {validation && (
+                                              <span>
+                                                Violates rule: {validation.ruleName} {validation.ruleValue.toString()}
+                                              </span>
+                                            )}
+                                          </div>
+                                        )}
+                                      </Validated>
+                                      <Validated name="body">
+                                        {validation => (
+                                          <div style={{ color: validation ? "red" : undefined }}>
+                                            <label>Body</label>
+                                            <TextArea notEmpty={true} rows={5} name="body" />
+                                          </div>
+                                        )}
+                                      </Validated>
+                                    </Fragment>
                                   )}
-                                </div>
-                              )}
-                            </Validated>
-                            <Validated name="body">
-                              {validation => (
-                                <div style={{ color: validation ? "red" : undefined }}>
-                                  <label>Body</label>
-                                  <TextArea notEmpty={true} rows={5} name="body" />
-                                </div>
-                              )}
-                            </Validated>
-                          </Fragment>
-                        )}
-                      </Root>
-                      <SubmitButton asyncDataType={Async.Type.Update} progress={Async.Progress.Normal} />
-                    </Fragment>
-                  )}
-                </Form>
-              </Fragment>
-            )}
-          </Sync.Var>
+                                </Root>
+                                <SubmitButton asyncDataType={Async.Type.Update} progress={Async.Progress.Normal} />
+                              </Fragment>
+                            )}
+                          </Form>
+                        </Fragment>
+                      )}
+                    </Sync.Var>
+                  </p>
+                )}
+              </Async.Var>
+            </Tab>
+            <Tab name="done">
+              <p>Edit success</p>
+            </Tab>
+          </Fragment>
         )}
-      </Async.Const>
+      </Sync.Guard>
     )
   }
 }
