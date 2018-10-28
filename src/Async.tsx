@@ -158,11 +158,6 @@ export namespace Async {
         s.unsubscribe()
       })
     }
-    componentDidUpdate(prevProps: ConstProps<T>) {
-      if (prevProps.value !== this.props.value) {
-        throw Error('Const component cant change value')
-      }
-    }
     componentDidMount() {
       this.subscriptions.push(
         Observable.of(0)
@@ -191,7 +186,7 @@ export namespace Async {
   }
   export interface VarProps<T> {
     setter: (value: T | null) => { operation: Observable<T | null>; type: Async.Type }
-    value: Observable<T>
+    initialValue: Observable<T>
     onChange?: (value: T | null) => void
     placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
     children: (data: T, asyncState: Async.State, setValue: (value: T | null) => void) => JSX.Element
@@ -240,7 +235,7 @@ export namespace Async {
           })
           .startWith(0)
           .switchMap(() => {
-            return this.props.value.catch(() => {
+            return this.props.initialValue.catch(() => {
               this.setState({
                 asyncState: {
                   progress: Async.Progress.Error,
