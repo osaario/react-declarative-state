@@ -11,7 +11,6 @@ export interface DatatableProps<T> {
   rowHeight?: number
   anticipateRows?: number
   children: (
-    data: T[],
     DataTable: {
       SearchField: (props: { placeholder: string }) => JSX.Element
       Table: (
@@ -35,7 +34,8 @@ export interface DatatableProps<T> {
         }
       ) => JSX.Element
       Sort: (props: SortProps<T>) => JSX.Element
-    }
+    },
+    data: T[]
   ) => JSX.Element
   initialSortField: keyof T
 }
