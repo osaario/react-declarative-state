@@ -2,8 +2,6 @@ import * as React from 'react'
 import * as _ from 'lodash'
 import { Observable, Subscription, Subject } from 'rxjs'
 import { ProgressContainer } from './ProgressContainer'
-import { ErrorAlert } from './ErrorAlert'
-import { ProgressBar } from './ProgressBar'
 
 export namespace Async {
   export const enum Type {
@@ -142,47 +140,13 @@ export namespace Async {
   }
 
   export interface ConstProps<T> extends ConstSharedProps {
-    getValue: Async.Operation<T, Async.Type.Load>
-    children: (data: T, reloadTrigger: () => void) => JSX.Element
+    value: Async.Operation<T, Async.Type.Load>
+    children: (data: T) => JSX.Element
+    placeholder?: (progress: Async.Progress) => JSX.Element
   }
 
   export interface ConstState<T> {
     value: Async.Data<T | null>
-  }
-
-  function renderNoData(state: Async.State, props: ConstSharedProps & { lang: string }) {
-    if (state.progress === Async.Progress.Progressing) {
-      if (props.renderLoading) {
-        return props.renderLoading()
-      }
-      return (
-        <div
-          style={
-            props.progressContainerStyle
-              ? props.progressContainerStyle
-              : props.defaultPaddingOnProgressAndError
-                ? { padding: 15 }
-                : {}
-          }
-        >
-          <ProgressBar />
-        </div>
-      )
-    } else {
-      return (
-        <div
-          style={
-            props.errorContainerStyle
-              ? props.errorContainerStyle
-              : props.defaultPaddingOnProgressAndError
-                ? { padding: 15 }
-                : {}
-          }
-        >
-          <ErrorAlert asyncState={state} lang={props.lang} />
-        </div>
-      )
-    }
   }
 
   export class Const<T> extends React.Component<ConstProps<T>, ConstState<T>> {
@@ -193,21 +157,15 @@ export namespace Async {
     }
     render() {
       if (!this.state.value.data) {
-        return renderNoData(this.state.value.state, {
-          ...this.props,
-          lang: this.context.lang
-        } as any)
+        return this.props.placeholder && this.props.placeholder(this.state.value.state.progress)
       }
       return (
         <ProgressContainer
           progressing={this.state.value.state.progress === Async.Progress.Progressing}
         >
-          {this.props.children(this.state.value.data, this.reloadTrigger)}
+          {this.props.children(this.state.value.data)}
         </ProgressContainer>
       )
-    }
-    reloadTrigger = () => {
-      this.triggerSubject.next()
     }
     componentWillUnmount() {
       this.subscriptions.forEach(s => {
@@ -224,7 +182,7 @@ export namespace Async {
           })
           .startWith(0)
           .switchMap(() => {
-            return this.props.getValue().catch(() => {
+            return this.props.value().catch(() => {
               this.setState({
                 value: Async.setProgress(this.state.value, Async.Progress.Error)
               })
