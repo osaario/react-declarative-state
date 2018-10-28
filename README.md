@@ -60,9 +60,16 @@ class App extends React.Component {
                   </select>
                 </nav>
                 <DataTable data={photos} rowHeight={18} anticipateRows={70} initialSortField={"title"}>
-                  {(__, { THead, TBody, Sort }) => {
+                  {({ THead, TBody, Sort }, queryString, setQueryString) => {
                     return (
-                      <Fragment>
+                      <table>
+                        <input
+                          placeholder="search"
+                          value={queryString}
+                          onChange={(e: any) => {
+                            setQueryString(e.target.value)
+                          }}
+                        />
                         <THead>
                           <tr style={{ color }}>
                             <Sort field="title">
@@ -90,7 +97,7 @@ class App extends React.Component {
                             </Fragment>
                           )}
                         </TBody>
-                      </Fragment>
+                      </table>
                     )
                   }}
                 </DataTable>
