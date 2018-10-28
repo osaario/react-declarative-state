@@ -12,7 +12,7 @@ Library boilerplate starter: https://github.com/alexjoverm/typescript-library-st
 
 ### DataTable
 
-```typescript
+```JSX
 import React, { Fragment } from "react"
 
 import { DataTable, Sync, Async } from "declarative-components"
