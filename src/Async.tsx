@@ -1,7 +1,6 @@
 import * as React from 'react'
 import * as _ from 'lodash'
 import { Observable, Subscription, Subject } from 'rxjs'
-import { ProgressContainer } from './ProgressContainer'
 
 export namespace Async {
   export const enum Type {
@@ -141,8 +140,8 @@ export namespace Async {
 
   export interface ConstProps<T> extends ConstSharedProps {
     value: Async.Operation<T, Async.Type.Load>
-    children: (data: T) => JSX.Element
-    placeholder?: (progress: Async.Progress) => JSX.Element
+    children: (data: T, progress: Async.Progress) => JSX.Element
+    placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
   }
 
   export interface ConstState<T> {
@@ -157,15 +156,11 @@ export namespace Async {
     }
     render() {
       if (!this.state.value.data) {
-        return this.props.placeholder && this.props.placeholder(this.state.value.state.progress)
+        return (
+          this.props.placeholder && this.props.placeholder(this.state.value.state.progress as any)
+        )
       }
-      return (
-        <ProgressContainer
-          progressing={this.state.value.state.progress === Async.Progress.Progressing}
-        >
-          {this.props.children(this.state.value.data)}
-        </ProgressContainer>
-      )
+      return this.props.children(this.state.value.data, this.state.value.state.progress)
     }
     componentWillUnmount() {
       this.subscriptions.forEach(s => {

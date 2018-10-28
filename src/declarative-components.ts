@@ -3,7 +3,6 @@ export * from './Async'
 export * from './DataTable'
 export * from './Deleter'
 export * from './Loader'
-export * from './ProgressContainer'
 export * from './Sync'
 export * from './Updater'
 

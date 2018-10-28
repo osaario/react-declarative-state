@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { Observable, Subscription, Subject } from 'rxjs'
 import { Async } from './Async'
-import { ProgressContainer } from './ProgressContainer'
 
 export const enum DefaultCreateDelay {
   Modal = 1000,
@@ -34,14 +33,7 @@ export class Creater<T> extends React.Component<CreaterProps<T>, CreaterState> {
     this.submitSubject.next(data)
   }
   render() {
-    return (
-      <ProgressContainer
-        progressing={this.state.progress === Async.Progress.Progressing}
-        opaque={!this.props.transparentOnProgress}
-      >
-        {this.props.children(this.state.progress, this.trigger)}
-      </ProgressContainer>
-    )
+    return this.props.children(this.state.progress, this.trigger)
   }
   componentWillUnmount() {
     this.subscriptions.forEach(s => {

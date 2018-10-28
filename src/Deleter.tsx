@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { Observable, Subscription, Subject } from 'rxjs'
 import { Async } from './Async'
-import { ProgressContainer } from './ProgressContainer'
 
 export interface DeleterProps<T> {
   onDone: (id: string) => void
@@ -24,14 +23,7 @@ export class Deleter<T> extends React.Component<DeleterProps<T>, DeleterState> {
     this.deleteSubject.next(id)
   }
   render() {
-    return (
-      <ProgressContainer
-        opaque={!this.props.transparentOnProgress}
-        progressing={this.state.progress === Async.Progress.Progressing}
-      >
-        {this.props.children(this.state.progress, this.trigger)}
-      </ProgressContainer>
-    )
+    return this.props.children(this.state.progress, this.trigger)
   }
   componentWillUnmount() {
     this.subscriptions.forEach(s => {

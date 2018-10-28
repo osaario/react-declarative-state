@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { Observable, Subscription, Subject } from 'rxjs'
 import { Async } from './Async'
-import { ProgressContainer } from './ProgressContainer'
 
 export const enum DefaultUpdateDelay {
   Modal = 1000,
@@ -37,14 +36,7 @@ export class Updater<T> extends React.Component<UpdaterProps<T>, UpdaterState<T>
     this.submitSubject.next(data)
   }
   render() {
-    return (
-      <ProgressContainer
-        opaque={!this.props.transparentOnProgress}
-        progressing={this.state.progress === Async.Progress.Progressing}
-      >
-        {this.props.children(this.state.progress, this.trigger, this.state.lastData)}
-      </ProgressContainer>
-    )
+    return this.props.children(this.state.progress, this.trigger, this.state.lastData)
   }
   componentWillUnmount() {
     this.subscriptions.forEach(s => {
