@@ -34,7 +34,7 @@ export interface DatatableProps<T> {
           children: (data: T) => JSX.Element
         }
       ) => JSX.Element
-      SortHeader: (props: SortHeaderProps<T>) => JSX.Element
+      Sort: (props: SortProps<T>) => JSX.Element
     }
   ) => JSX.Element
   initialSortField: keyof T
@@ -46,10 +46,9 @@ export interface DatatableState<T> {
   sortedData: T[]
 }
 
-export interface SortHeaderProps<T> {
+export interface SortProps<T> {
+  children: (sortDirection: 'desc' | 'asc' | 'none', toggleSort: () => void) => JSX.Element
   field: keyof T
-  style?: React.CSSProperties
-  children: React.ReactNode
 }
 
 interface DataTableBodyState {
@@ -223,21 +222,12 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
       />
     )
   }
-  SortHeader = (props: SortHeaderProps<T>) => {
-    return (
-      <th
-        style={{ cursor: 'pointer', whiteSpace: 'nowrap', ...props.style }}
-        onClick={() => {
-          this.onSortFieldClick(props.field)
-        }}
-      >
-        {props.children}{' '}
-        {this.state.sortField === props.field
-          ? this.state.sortDirection === 'desc'
-            ? '⬇'
-            : '⬆'
-          : '⬍'}
-      </th>
+  Sort = (props: SortProps<T>) => {
+    return props.children(
+      this.state.sortField === props.field ? this.state.sortDirection : 'none',
+      () => {
+        this.onSortFieldClick(props.field)
+      }
     )
   }
   onSortFieldClick = (sortField: keyof T) => {
@@ -314,7 +304,7 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
       TBody: this.TBody,
       THead: this.THead,
       SearchField: this.SearchField,
-      SortHeader: this.SortHeader
+      Sort: this.Sort
     })
   }
 
