@@ -15,7 +15,7 @@ Library boilerplate starter: https://github.com/alexjoverm/typescript-library-st
 ```
 import React, { Fragment } from "react"
 
-import { DataTable, Selecter, Loader, Async } from "declarative-components"
+import { DataTable, Sync, Async } from "declarative-components"
 const colors = ["red", "green", "blue", "yellow"] as ("red" | "green" | "blue" | "yellow")[]
 
 interface Photo {
@@ -29,13 +29,13 @@ interface Photo {
 class App extends React.Component {
   public render() {
     return (
-      <Loader
-        operation={() => {
+      <Async.Const
+        getValue={() => {
           return Async.GET<Photo[]>("https://jsonplaceholder.typicode.com/photos")
         }}
       >
         {photos => (
-          <Selecter options={colors}>
+          <Sync.Var initialValue={colors[0]}>
             {(color, setColor) => (
               <Fragment>
                 <nav>
@@ -86,9 +86,9 @@ class App extends React.Component {
                 </DataTable>
               </Fragment>
             )}
-          </Selecter>
+          </Sync.Var>
         )}
-      </Loader>
+      </Async.Const>
     )
   }
 }
@@ -98,7 +98,7 @@ class App extends React.Component {
 
 ```
 import React, { Fragment } from "react"
-import { Form, Loader, Async, Variable } from "declarative-components"
+import { Form, Async, Sync } from "declarative-components"
 
 interface Post {
   userId: number
@@ -110,13 +110,13 @@ interface Post {
 class App extends React.Component {
   public render() {
     return (
-      <Loader
-        operation={() => {
+      <Async.Const
+        getValue={() => {
           return Async.GET<Post>("https://jsonplaceholder.typicode.com/posts/1")
         }}
       >
         {initialPost => (
-          <Variable initialValue={5}>
+          <Sync.Var initialValue={5}>
             {(minLength, setMinLength) => (
               <Fragment>
                 <p>
@@ -164,9 +164,9 @@ class App extends React.Component {
                 </Form>
               </Fragment>
             )}
-          </Variable>
+          </Sync.Var>
         )}
-      </Loader>
+      </Async.Const>
     )
   }
 }

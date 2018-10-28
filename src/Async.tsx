@@ -142,7 +142,7 @@ export namespace Async {
   }
 
   export interface ConstProps<T> extends ConstSharedProps {
-    getInitialValue: Async.Operation<T, Async.Type.Load>
+    getValue: Async.Operation<T, Async.Type.Load>
     children: (data: T, reloadTrigger: () => void) => JSX.Element
   }
 
@@ -224,7 +224,7 @@ export namespace Async {
           })
           .startWith(0)
           .switchMap(() => {
-            return this.props.getInitialValue().catch(() => {
+            return this.props.getValue().catch(() => {
               this.setState({
                 value: Async.setProgress(this.state.value, Async.Progress.Error)
               })
