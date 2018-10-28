@@ -30,7 +30,14 @@ class App extends React.Component {
   public render() {
     return (
       <Async.Const
-        getValue={() => {
+        placeholder={progress => {
+          if (progress === Async.Progress.Progressing) {
+            return <div>Progressing...</div>
+          } else {
+            return <div style={{ color: "red" }}>Error happened</div>
+          }
+        }}
+        value={() => {
           return Async.GET<Photo[]>("https://jsonplaceholder.typicode.com/photos")
         }}
       >
@@ -53,21 +60,24 @@ class App extends React.Component {
                   </select>
                 </nav>
                 <DataTable data={photos} rowHeight={18} anticipateRows={70} initialSortField={"title"}>
-                  {(__, { THead, TBody, SortHeader }) => {
+                  {(__, { THead, TBody, Sort }) => {
                     return (
                       <Fragment>
                         <THead>
                           <tr style={{ color }}>
-                            <SortHeader style={{ textAlign: "left" }} field="title">
-                              title
-                            </SortHeader>
-                            <SortHeader style={{ textAlign: "left" }} field="id">
-                              id
-                            </SortHeader>
-                            <SortHeader style={{ textAlign: "left" }} field="albumId">
-                              AlbumId
-                            </SortHeader>
-                            <SortHeader field="url">Url</SortHeader>
+                            <Sort field="title">
+                              {(sortDirection, toggleSort) => (
+                                <th
+                                  style={{ textAlign: "left", cursor: "pointer", whiteSpace: "nowrap" }}
+                                  onClick={toggleSort}
+                                >
+                                  Title {sortDirection === "desc" ? "⬇" : sortDirection === "asc" ? "⬆" : "⬍"}
+                                </th>
+                              )}
+                            </Sort>
+                            <th style={{ textAlign: "left" }}>id</th>
+                            <th style={{ textAlign: "left" }}>AlbumId</th>
+                            <th>Url</th>
                           </tr>
                         </THead>
                         <TBody>
@@ -111,7 +121,14 @@ class App extends React.Component {
   public render() {
     return (
       <Async.Const
-        getValue={() => {
+        placeholder={progress => {
+          if (progress === Async.Progress.Progressing) {
+            return <div>Progressing...</div>
+          } else {
+            return <div style={{ color: "red" }}>Error happened</div>
+          }
+        }}
+        value={() => {
           return Async.GET<Post>("https://jsonplaceholder.typicode.com/posts/1")
         }}
       >
@@ -138,23 +155,33 @@ class App extends React.Component {
                   {({ Root, SubmitButton }) => (
                     <Fragment>
                       <Root>
-                        {({ FormGroup, Input, TextArea, ErrorLabel }) => (
+                        {({ Validated, Input, TextArea }) => (
                           <Fragment>
-                            <FormGroup name="id">
+                            <div>
                               <label>Id</label>
                               <Input name="id" />
-                              <ErrorLabel name="id" />
-                            </FormGroup>
-                            <FormGroup name="title">
-                              <label>Title</label>
-                              <Input notEmpty={true} minLength={minLength} name="title" />
-                              <ErrorLabel name="title" />
-                            </FormGroup>
-                            <FormGroup name="body">
-                              <label>Body</label>
-                              <TextArea notEmpty={true} rows={5} name="body" />
-                              <ErrorLabel name="body" />
-                            </FormGroup>
+                            </div>
+                            <Validated name="title">
+                              {validation => (
+                                <div style={{ color: validation ? "red" : undefined }}>
+                                  <label>Title</label>
+                                  <Input notEmpty={true} minLength={minLength} name="title" />
+                                  {validation && (
+                                    <span>
+                                      Violates rule: {validation.ruleName} {validation.ruleValue.toString()}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </Validated>
+                            <Validated name="body">
+                              {validation => (
+                                <div style={{ color: validation ? "red" : undefined }}>
+                                  <label>Body</label>
+                                  <TextArea notEmpty={true} rows={5} name="body" />
+                                </div>
+                              )}
+                            </Validated>
                           </Fragment>
                         )}
                       </Root>
