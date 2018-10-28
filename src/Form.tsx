@@ -11,7 +11,7 @@ type ValidationRules = {
     : (typeof formRules)[P] extends ValidationRuleType<number> ? number : string
 }
 
-export type HelpBlockProps<T> = React.DetailedHTMLProps<
+export type ErrorLabelProps<T> = React.DetailedHTMLProps<
   React.InputHTMLAttributes<HTMLDivElement>,
   HTMLDivElement
 > & {
@@ -23,7 +23,7 @@ export type FormGroupProps<T> = React.DetailedHTMLProps<
 > & {
   name: keyof T
 }
-export type FormControlProps<T> = _.Omit<
+export type InputProps<T> = _.Omit<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
   'ref'
 > &
@@ -49,9 +49,9 @@ export interface FormScopeSharedPublicProps<T> {
       Sub: <B extends keyof T>(
         props: FormSubScopePublicProps<T, B> & FormScopeSharedPublicProps<T[B]>
       ) => JSX.Element | null
-      FormControl: (props: FormControlProps<T>) => JSX.Element
+      Input: (props: InputProps<T>) => JSX.Element
       FormGroup: (props: FormGroupProps<T>) => JSX.Element
-      HelpBlock: (props: HelpBlockProps<T>) => JSX.Element | null
+      ErrorLabel: (props: ErrorLabelProps<T>) => JSX.Element | null
     }
   ) => JSX.Element | null
 }
@@ -93,7 +93,7 @@ export interface FormProps<T>
   ) => JSX.Element
 }
 
-class FormControlInner extends React.Component<
+class InputInner extends React.Component<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & {
     onDidMount: (ref: React.RefObject<HTMLInputElement>) => void
     onWillUnmount: () => void
@@ -184,16 +184,16 @@ export class FormScope<T, S extends keyof T> extends React.Component<
     const validation = this.getValidationForField(this.getLensPathForField(props.name))
     return <div {...props} style={{ ...props.style, color: validation ? 'red' : undefined }} />
   }
-  FormControl = (props: FormControlProps<T[S]>) => {
+  Input = (props: InputProps<T[S]>) => {
     const rules = _.pick(props, _.keys(formRules)) as ValidationRules
     const lensPath = this.getLensPathForField(props.name)
     const value = L.get([lensPath, 'value', L.optional], this.props.value)
     if (!value == null && props.value == null)
-      throw Error('FormControl needs to have value in Form state or provided one in props')
+      throw Error('Input needs to have value in Form state or provided one in props')
     if (!_.isEmpty(rules) && (props.disabled || props.readOnly))
       throw Error('Cant have rules on a non modifiable field')
     return (
-      <FormControlInner
+      <InputInner
         onChange={this.riggedOnChange}
         value={value}
         {..._.omit(_.omit(props, 'ref'), _.keys(formRules))}
@@ -222,10 +222,14 @@ export class FormScope<T, S extends keyof T> extends React.Component<
       />
     )
   }
-  HelpBlock = (props: HelpBlockProps<T[S]>) => {
+  ErrorLabel = (props: ErrorLabelProps<T[S]>) => {
     const validation = this.getValidationForField(this.getLensPathForField(props.name))
     if (validation) {
-      return <div {..._.omit(props, 'name')}>{validation.description}</div>
+      return (
+        <div {..._.omit(props, 'name')}>
+          <small>{validation.description}</small>
+        </div>
+      )
     }
     return null
   }
@@ -267,9 +271,9 @@ export class FormScope<T, S extends keyof T> extends React.Component<
           L.modify(wrappedValues, unWrapValue, this.props.rootValue[this.props.scope]),
           this.riggedOnChange,
           {
-            FormControl: this.FormControl,
+            Input: this.Input,
             FormGroup: this.FormGroup,
-            HelpBlock: this.HelpBlock,
+            ErrorLabel: this.ErrorLabel,
             Sub: this.Sub
           }
         )}
