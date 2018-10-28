@@ -113,7 +113,7 @@ class App extends React.Component {
 
 ### Form
 
-```typescript
+```JSX
 import React, { Fragment } from "react"
 import { Form, Async, Sync } from "declarative-components"
 
