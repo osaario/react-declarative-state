@@ -15,4 +15,43 @@ export const notEmpty: ValidationRuleType<boolean> = (value, ruleValue) => {
   else return { validation: 'error', description: "Field can't be empty" }
 }
 
-export const formRules = { notEmpty }
+export const minLength: ValidationRuleType<number> = (value, ruleValue) => {
+  if (typeof value !== 'string') {
+    throw Error("Can't have minLength rule on a non string field")
+  }
+  if (!ruleValue || value === '') return null
+  const pass = value.length >= ruleValue
+  if (pass) return null
+  else return { validation: 'error', description: `Value too short (min. ${ruleValue})` }
+}
+
+/*
+
+export const min: ValidationRuleType<number> = (value, ruleValue, S) => {
+  const pass = value >= ruleValue
+  if (pass) return null
+  else return { validation: 'error', description: `${S.VALUE_TOO_SMALL} (min. ${ruleValue})` }
+}
+
+export const max: ValidationRuleType<number> = (value, ruleValue, S) => {
+  const pass = value <= ruleValue
+  if (pass) return null
+  else return { validation: 'error', description: `${S.VALUE_TOO_LARGE} (max. ${ruleValue})` }
+}
+
+export const email: ValidationRuleType<boolean> = (value, ruleValue, S) => {
+  if (!ruleValue || !value) return null
+  const pass = isEmailValid(value)
+  if (pass) return null
+  else return { validation: 'error', description: S.INVALID_EMAIL }
+}
+
+export const phone: ValidationRuleType<boolean> = (value, ruleValue, S) => {
+  if (!ruleValue || !value) return null
+  const pass = isPhoneValid(value)
+  if (pass) return null
+  else return { validation: 'error', description: S.INCORRECT_FORMAT }
+}
+
+*/
+export const formRules = { notEmpty, minLength }

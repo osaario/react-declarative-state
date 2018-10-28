@@ -6,7 +6,7 @@ export * from './ErrorAlert'
 export * from './Loader'
 export * from './ProgressContainer'
 export * from './ProgressBar'
-export * from './Tabbed'
+export * from './Value'
 export * from './Updater'
 
 export default {}
