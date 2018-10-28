@@ -12,13 +12,6 @@ export interface DatatableProps<T> {
   anticipateRows?: number
   children: (
     DataTable: {
-      SearchField: (props: { placeholder: string }) => JSX.Element
-      Table: (
-        props: React.DetailedHTMLProps<
-          React.TableHTMLAttributes<HTMLTableElement>,
-          HTMLTableElement
-        >
-      ) => JSX.Element
       THead: (
         props: React.DetailedHTMLProps<
           React.HTMLAttributes<HTMLTableSectionElement>,
@@ -35,7 +28,8 @@ export interface DatatableProps<T> {
       ) => JSX.Element
       Sort: (props: SortProps<T>) => JSX.Element
     },
-    data: T[]
+    queryString: string,
+    onSearch: (queryString: string) => void
   ) => JSX.Element
   initialSortField: keyof T
 }
@@ -61,7 +55,11 @@ class DataTableBody<T> extends React.PureComponent<
   { data: T[]; rowHeight: number; anticipateRows?: number; children: (data: T) => JSX.Element },
   DataTableBodyState
 > {
-  ref = React.createRef<HTMLTableSectionElement>()
+  private ref = React.createRef<HTMLTableSectionElement>()
+  public scrollToTop = () => {
+    const domNode = ReactDOM.findDOMNode(this.ref.current as any) as any
+    domNode.scrollTop = 0
+  }
   state: DataTableBodyState = {
     firstIndexOnScreen: 0,
     height: 500,
@@ -144,6 +142,7 @@ class DataTableBody<T> extends React.PureComponent<
 }
 
 export class DataTable<T> extends React.PureComponent<DatatableProps<T>, DatatableState<T>> {
+  bodyRef = React.createRef<DataTableBody<T>>()
   static Td = (
     props: React.DetailedHTMLProps<
       React.TdHTMLAttributes<HTMLTableDataCellElement>,
@@ -189,11 +188,6 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
       />
     )
   }
-  Table = (
-    props: React.DetailedHTMLProps<React.TableHTMLAttributes<HTMLTableElement>, HTMLTableElement>
-  ) => {
-    return <table style={{}} {...props} />
-  }
   TBody = (
     props: React.DetailedHTMLProps<
       React.HTMLAttributes<HTMLTableSectionElement>,
@@ -204,21 +198,11 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
   ) => {
     return (
       <DataTableBody
+        ref={this.bodyRef}
         data={this.state.sortedData}
         anticipateRows={this.props.anticipateRows}
         rowHeight={this.props.rowHeight!}
         children={props.children}
-      />
-    )
-  }
-  SearchField = (props: { placeholder: string }) => {
-    return (
-      <input
-        value={this.state.searchString}
-        onChange={(e: any) => {
-          this.onSearchStringChange(e.target.value)
-        }}
-        placeholder={props.placeholder}
       />
     )
   }
@@ -286,9 +270,14 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
     }
     sortedData = this.state.sortDirection === 'asc' ? sortedData : _.reverse(sortedData)
     // console.log(sortedData)
-    this.setState({
-      sortedData
-    })
+    this.setState(
+      {
+        sortedData
+      },
+      () => {
+        this.bodyRef.current!.scrollToTop()
+      }
+    )
   }
   componentDidUpdate(prevProps: any) {
     if (this.props.data !== prevProps.data) {
@@ -297,15 +286,15 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
     }
   }
   render() {
-    const data = this.state.sortedData
-    console.log('render dtable')
-    return this.props.children(data, {
-      Table: this.Table,
-      TBody: this.TBody,
-      THead: this.THead,
-      SearchField: this.SearchField,
-      Sort: this.Sort
-    })
+    return this.props.children(
+      {
+        TBody: this.TBody,
+        THead: this.THead,
+        Sort: this.Sort
+      },
+      this.state.searchString,
+      this.onSearchStringChange
+    )
   }
 
   componentDidMount() {
