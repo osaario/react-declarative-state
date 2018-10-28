@@ -1,10 +1,7 @@
 export * from './ProgressButton'
 export * from './Async'
 export * from './DataTable'
-export * from './Deleter'
-export * from './Loader'
 export * from './Sync'
-export * from './Updater'
 
 export default {}
 

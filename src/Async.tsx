@@ -30,12 +30,6 @@ export namespace Async {
 
   export type Data<T> = { data: T; state: State }
 
-  export type Operation<E, T extends Type> = T extends Type.Load
-    ? () => Observable<E>
-    : T extends Type.Delete
-      ? (id: string) => Observable<number>
-      : (data: T extends Type.Create ? Model.Incomplete<E> : E) => Observable<E>
-
   export type ObservableOperation<E> = Observable<E>
 
   export function create<T>(data: T, type: Type, initialProgress = Progress.Normal): Data<T> {
@@ -85,14 +79,14 @@ export namespace Async {
     ) as Observable<T>
   }
 
-  export function DELETE(url: string): Observable<number> {
+  export function DELETE(url: string): Observable<null> {
     return Observable.fromPromise(
       fetch(url, {
         method: 'DELETE',
         headers: { ...headers }
       }).then(response => {
         if (response.ok) {
-          return response.status
+          return null
         }
         throw Error(response.status.toString())
       })
@@ -139,7 +133,7 @@ export namespace Async {
   }
 
   export interface ConstProps<T> extends ConstSharedProps {
-    value: Async.Operation<T, Async.Type.Load>
+    value: Observable<T>
     children: (data: T, progress: Async.Progress) => JSX.Element
     placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
   }
@@ -150,7 +144,6 @@ export namespace Async {
 
   export class Const<T> extends React.Component<ConstProps<T>, ConstState<T>> {
     subscriptions: Subscription[] = []
-    triggerSubject = new Subject()
     state: ConstState<T> = {
       value: Async.create(null, Async.Type.Load, Async.Progress.Progressing)
     }
@@ -169,7 +162,7 @@ export namespace Async {
     }
     componentDidMount() {
       this.subscriptions.push(
-        this.triggerSubject
+        Observable.of(0)
           .do(() => {
             this.setState({
               value: Async.setProgress(this.state.value, Async.Progress.Progressing)
@@ -177,7 +170,7 @@ export namespace Async {
           })
           .startWith(0)
           .switchMap(() => {
-            return this.props.value().catch(() => {
+            return this.props.value.catch(() => {
               this.setState({
                 value: Async.setProgress(this.state.value, Async.Progress.Error)
               })
@@ -190,6 +183,112 @@ export namespace Async {
               value: Async.set(this.state.value, value!, Async.Progress.Done)
             })
           })
+      )
+    }
+  }
+  export interface VarProps<T> {
+    setter: (value: T | null) => { operation: Observable<T | null>; type: Async.Type }
+    value: Observable<T>
+    placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
+    children: (data: T, asyncState: Async.State, setValue: (value: T | null) => void) => JSX.Element
+  }
+
+  export interface VarState<T> {
+    value: T | null
+    asyncState: Async.State
+  }
+
+  export class Var<T> extends React.Component<VarProps<T>, VarState<T>> {
+    subscriptions: Subscription[] = []
+    submitSubject = new Subject<T | null>()
+    state: VarState<T> = {
+      asyncState: {
+        progress: Async.Progress.Normal,
+        type: Async.Type.Load
+      },
+      value: null
+    }
+    setValue = (data: T | null) => {
+      this.submitSubject.next(data)
+    }
+    render() {
+      if (this.state.value) {
+        return this.props.children(this.state.value, this.state.asyncState, this.setValue)
+      } else {
+        return this.props.placeholder && this.props.placeholder(this.state.asyncState as any)
+      }
+    }
+    componentWillUnmount() {
+      this.subscriptions.forEach(s => {
+        s.unsubscribe()
+      })
+    }
+    componentDidMount() {
+      this.subscriptions.push(
+        Observable.of(0)
+          .do(() => {
+            this.setState({
+              asyncState: {
+                progress: Async.Progress.Progressing,
+                type: Async.Type.Load
+              }
+            })
+          })
+          .startWith(0)
+          .switchMap(() => {
+            return this.props.value.catch(() => {
+              this.setState({
+                asyncState: {
+                  progress: Async.Progress.Error,
+                  type: Async.Type.Load
+                }
+              })
+              return Observable.of(null)
+            })
+          })
+          .filter(x => !!x)
+          .subscribe(value => {
+            this.setState({
+              asyncState: {
+                progress: Async.Progress.Error,
+                type: Async.Type.Load
+              },
+              value
+            })
+          })
+      )
+      const submitObs = this.submitSubject
+        .map(value => this.props.setter(value))
+        .do(operation => {
+          this.setState({
+            asyncState: {
+              progress: Async.Progress.Progressing,
+              type: operation.type
+            }
+          })
+        })
+        .switchMap(operation => {
+          return operation.operation.catch(() => {
+            this.setState({
+              asyncState: {
+                progress: Async.Progress.Error,
+                type: operation.type
+              }
+            })
+            return Observable.of(null)
+          })
+        })
+        .filter(x => !!x)
+      this.subscriptions.push(
+        submitObs.subscribe(value => {
+          this.setState({
+            value,
+            asyncState: {
+              progress: Async.Progress.Normal,
+              type: Async.Type.Load
+            }
+          })
+        })
       )
     }
   }
