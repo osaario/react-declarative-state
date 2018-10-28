@@ -1,5 +1,5 @@
 import * as React from 'react'
-import _ from 'lodash'
+import * as _ from 'lodash'
 import { Observable, Subscription, Subject } from 'rxjs'
 import { Async } from './Async'
 import { ProgressContainer } from './ProgressContainer'

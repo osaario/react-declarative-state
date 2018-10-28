@@ -1,5 +1,5 @@
-import React, { createRef, RefObject, Fragment, FormEvent } from 'react'
-import _, { Omit } from 'lodash'
+import * as React from 'react'
+import * as _ from 'lodash'
 import { findDOMNode } from 'react-dom'
 import { formRules, ValidationRuleType, Validation } from './formrules'
 import { ProgressButtonProps, ProgressButton } from './ProgressButton'
@@ -23,7 +23,7 @@ export type FormGroupProps<T> = React.DetailedHTMLProps<
 > & {
   name: keyof T
 }
-export type FormControlProps<T> = Omit<
+export type FormControlProps<T> = _.Omit<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
   'ref'
 > &
@@ -69,7 +69,7 @@ export interface FormScopePrivateProps<T> {
   onInsertRule: (
     lensPath: LensPathType,
     rule: ValidationRules,
-    ref: RefObject<HTMLInputElement>
+    ref: React.RefObject<HTMLInputElement>
   ) => void
   onRemoveRule: (lensPath: LensPathType) => void
   touchField: (lensPath: LensPathType) => void
@@ -78,7 +78,7 @@ export interface FormScopePrivateProps<T> {
 }
 
 export interface FormProps<T>
-  extends Omit<
+  extends _.Omit<
       React.DetailedHTMLProps<React.FormHTMLAttributes<HTMLFormElement>, HTMLFormElement>,
       'onSubmit'
     > {
@@ -95,11 +95,11 @@ export interface FormProps<T>
 
 class FormControlInner extends React.Component<
   React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & {
-    onDidMount: (ref: RefObject<HTMLInputElement>) => void
+    onDidMount: (ref: React.RefObject<HTMLInputElement>) => void
     onWillUnmount: () => void
   }
 > {
-  ref = createRef<HTMLInputElement>()
+  ref = React.createRef<HTMLInputElement>()
   render() {
     return <input ref={this.ref} {..._.omit(this.props, ['onDidMount', 'onWillUnmount'])} />
   }
@@ -229,7 +229,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
     }
     return null
   }
-  riggedOnChange = (e: FormEvent<any> | FormEventType<T[S]> | FormEventType<T[S]>[]) => {
+  riggedOnChange = (e: React.FormEvent<any> | FormEventType<T[S]> | FormEventType<T[S]>[]) => {
     // a hack to know if these are fed
     if ((e as any).target && _.isObject((e as any).target)) {
       const event = e as any
@@ -262,7 +262,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
   }
   render() {
     return (
-      <Fragment>
+      <React.Fragment>
         {this.props.children(
           L.modify(wrappedValues, unWrapValue, this.props.rootValue[this.props.scope]),
           this.riggedOnChange,
@@ -273,7 +273,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
             Sub: this.Sub
           }
         )}
-      </Fragment>
+      </React.Fragment>
     )
   }
 }
@@ -350,7 +350,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   insertRule = (
     lensPath: LensPathType,
     rule: ValidationRules,
-    ref: RefObject<HTMLInputElement>
+    ref: React.RefObject<HTMLInputElement>
   ) => {
     /* TODO Check that the path exists or else throw Error */
     if (!L.isDefined(lensPath)) {
