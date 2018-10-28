@@ -1,3 +1,4 @@
+/*
 import * as React from 'react'
 import * as _ from 'lodash'
 import { Observable, Subscription, Subject } from 'rxjs'
@@ -167,3 +168,5 @@ export class ObsLoader<T> extends React.Component<ObsLoaderProps<T>, ObsLoaderSt
     )
   }
 }
+*/
+export default {}
