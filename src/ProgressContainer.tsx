@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from 'react'
 
 export interface ProgressContainerProps
   extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {

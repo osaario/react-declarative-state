@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from 'react'
 import _ from 'lodash'
 import { Observable, Subscription, Subject } from 'rxjs'
 import { Async } from './Async'

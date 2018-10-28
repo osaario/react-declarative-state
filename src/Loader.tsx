@@ -1,5 +1,5 @@
-import React, { CSSProperties } from 'react'
-import _ from 'lodash'
+import * as React from 'react'
+import * as _ from 'lodash'
 import { Observable, Subscription, Subject } from 'rxjs'
 import { Async } from './Async'
 import { ProgressContainer } from './ProgressContainer'
@@ -8,8 +8,8 @@ import { ProgressBar } from './ProgressBar'
 
 interface LoaderSharedProps {
   approxMS?: number
-  progressContainerStyle?: CSSProperties
-  errorContainerStyle?: CSSProperties
+  progressContainerStyle?: React.CSSProperties
+  errorContainerStyle?: React.CSSProperties
   defaultPaddingOnProgressAndError?: boolean
   renderLoading?: () => JSX.Element | null
 }
