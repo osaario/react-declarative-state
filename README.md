@@ -98,10 +98,7 @@ class App extends React.Component {
 
 ```
 import React, { Fragment } from "react"
-
-import { Loader } from "./declarative-components/src/Loader"
-import { Async } from "./declarative-components/src/Async"
-import { Form } from "./declarative-components/src/Form"
+import { Form, Loader, Async } from "declarative-components"
 
 interface Post {
   userId: number
@@ -128,22 +125,22 @@ class App extends React.Component {
             {({ Root, SubmitButton }) => (
               <Fragment>
                 <Root>
-                  {(post, __, { FormGroup, FormControl, HelpBlock }) => (
+                  {(___, __, { FormGroup, Input, TextArea, ErrorLabel }) => (
                     <Fragment>
                       <FormGroup name="id">
                         <label>Id</label>
-                        <FormControl name="id" />
-                        <HelpBlock name="id" />
+                        <Input name="id" />
+                        <ErrorLabel name="id" />
                       </FormGroup>
                       <FormGroup name="title">
                         <label>Title</label>
-                        <FormControl notEmpty={true} name="title" />
-                        <HelpBlock name="title" />
+                        <Input notEmpty={true} name="title" />
+                        <ErrorLabel name="title" />
                       </FormGroup>
                       <FormGroup name="body">
                         <label>Body</label>
-                        <FormControl name="body" />
-                        <HelpBlock name="body" />
+                        <TextArea notEmpty={true} rows={5} name="body" />
+                        <ErrorLabel name="body" />
                       </FormGroup>
                     </Fragment>
                   )}
