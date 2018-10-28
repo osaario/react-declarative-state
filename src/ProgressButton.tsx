@@ -1,5 +1,4 @@
 import * as React from 'react'
-import * as _ from 'lodash'
 import { Async } from './Async'
 
 export interface ProgressButtonProps
@@ -35,20 +34,12 @@ export class ProgressButton extends React.PureComponent<ProgressButtonProps> {
         break
       }
     }
+    const { asyncDataType, ...props } = this.props
     return (
       <button
-        {..._.omit(
-          this.props,
-          'asyncDataType',
-          'normalText',
-          'loadingText',
-          'confirm',
-          'state',
-          'errorText',
-          'successText'
-        )}
+        {...props}
         style={{
-          ...this.props.style,
+          ...props.style,
           opacity: isProgressing ? 0.5 : 1,
           cursor: isProgressing || isSuccess || this.props.disabled ? 'not-allowed' : 'pointer',
           borderColor: isError ? 'red' : undefined

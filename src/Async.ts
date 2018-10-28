@@ -99,7 +99,7 @@ export namespace Async {
 
   export function POST<T>(url: string, data: T) {
     return Observable.fromPromise(
-      fetch(`url`, {
+      fetch(url, {
         method: 'POST',
         headers: { ...headers },
         body: JSON.stringify(data)
