@@ -56,7 +56,6 @@ export interface FormScopeSharedPublicProps<T> {
       Input: (props: InputProps<T>) => JSX.Element
       TextArea: (props: TextAreaProps<T>) => JSX.Element
       Validated: (props: ValidatedProps<T>) => JSX.Element
-      ErrorLabel: (props: ErrorLabelProps<T>) => JSX.Element | null
     },
     value: T,
     handleFieldChange: (e: FormEventType<T>) => void
@@ -251,17 +250,6 @@ export class FormScope<T, S extends keyof T> extends React.Component<
       />
     )
   }
-  ErrorLabel = (props: ErrorLabelProps<T[S]>) => {
-    const validation = this.getValidationForField(this.getLensPathForField(props.name))
-    if (validation) {
-      return (
-        <div {..._.omit(props, 'name')}>
-          <small>{validation.description}</small>
-        </div>
-      )
-    }
-    return null
-  }
   riggedOnChange = (e: React.FormEvent<any> | FormEventType<T[S]> | FormEventType<T[S]>[]) => {
     // a hack to know if these are fed
     if ((e as any).target && _.isObject((e as any).target)) {
@@ -301,7 +289,6 @@ export class FormScope<T, S extends keyof T> extends React.Component<
             Input: this.Input,
             TextArea: this.TextArea,
             Validated: this.Validated,
-            ErrorLabel: this.ErrorLabel,
             Sub: this.Sub
           },
           L.modify(wrappedValues, unWrapValue, this.props.rootValue[this.props.scope]),

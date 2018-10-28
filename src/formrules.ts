@@ -1,8 +1,3 @@
-export interface Validation {
-  validation: 'error'
-  description: string
-}
-
 export type ValidationRuleType<T extends string | number | boolean> = (
   value: any,
   ruleValue: T
@@ -12,7 +7,7 @@ export const notEmpty: ValidationRuleType<boolean> = (value, ruleValue) => {
   if (!ruleValue) return null
   const pass = !(value == null || value === '')
   if (pass) return null
-  else return { validation: 'error', description: "Field can't be empty" }
+  else return { validation: 'error', ruleValue, ruleName: 'notEmpty' }
 }
 
 export const minLength: ValidationRuleType<number> = (value, ruleValue) => {
@@ -22,7 +17,13 @@ export const minLength: ValidationRuleType<number> = (value, ruleValue) => {
   if (!ruleValue || value === '') return null
   const pass = value.length >= ruleValue
   if (pass) return null
-  else return { validation: 'error', description: `Value too short (min. ${ruleValue})` }
+  else return { validation: 'error', ruleValue, ruleName: 'minLength' }
+}
+
+export interface Validation {
+  validation: 'error'
+  ruleValue: string | number | boolean
+  ruleName: keyof typeof formRules
 }
 
 /*
