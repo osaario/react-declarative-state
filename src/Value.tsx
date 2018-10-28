@@ -21,7 +21,3 @@ export class Value<T> extends React.Component<ValueProps<T>, ValueState<T>> {
     return this.props.children(this.state.value, this.setValue)
   }
 }
-
-export class ModalSwitch<T> extends Value<T | null> {}
-export class Selecter<T> extends Value<T> {}
-export class Tabbed<T> extends Value<T> {}

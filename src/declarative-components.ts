@@ -7,6 +7,7 @@ export * from './Loader'
 export * from './ProgressContainer'
 export * from './ProgressBar'
 export * from './Value'
+export * from './Tabbed'
 export * from './Updater'
 
 export default {}
