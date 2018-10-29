@@ -10,13 +10,14 @@ type ValidationRules = {
     ? boolean
     : (typeof formRules)[P] extends ValidationRuleType<number> ? number : string
 }
+export type ValidationGroup = { [K in keyof typeof formRules]?: Validation }
 
 export type ErrorLabelProps<T> = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLDivElement>, HTMLDivElement> & {
   name: keyof T
 }
 export type ValidatedProps<T> = {
   name: keyof T
-  children: (validation: Validation | null) => JSX.Element
+  children: (validation: ValidationGroup | null) => JSX.Element
 }
 export type TextAreaProps<T> = _.Omit<
   React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>,
@@ -114,18 +115,24 @@ class InputInner extends React.Component<
   }
 }
 
-function getValidationFromRules(rules: any, value: any) {
+function getValidationFromRules(rules: any, value: any): ValidationGroup {
   // _.keys is untyped!!
-  const validationsForField = _.mapValues(_.omit(rules, 'ref'), (ruleValue, rule) => {
-    const validation = (formRules as any)[rule as keyof typeof formRules](value, ruleValue as any)
-    return validation
-  })
-  // TODO: Add so that returns all validations that have not passed, not just the first one
-  const invalid = _.toPairs(validationsForField).filter(arr => !!arr[1])
-  if (invalid.length > 0) {
-    return invalid[0][1] as Validation
-  }
-  return null
+  const { ref, ...withoutRef } = rules
+  const validationsForField = Object.keys(withoutRef)
+    .map(key => {
+      const ruleValue = withoutRef[key]
+      const validation = (formRules as any)[key as keyof typeof formRules](value, ruleValue as any)
+      return { validation, key }
+    })
+    .filter(v => !!v.validation)
+    .reduce((agg, { validation, key }) => {
+      return {
+        ...agg,
+        [key]: validation
+      }
+    }, {})
+
+  return validationsForField as ValidationGroup
 }
 
 export class FormScope<T, S extends keyof T> extends React.Component<
@@ -152,7 +159,8 @@ export class FormScope<T, S extends keyof T> extends React.Component<
     // const isFocused = _.includes(this.state.focusedFields, props.name)
     if (touched && rules) {
       const value = L.get([lens, 'value'], this.props.value)
-      return getValidationFromRules(rules, value)
+      const invalid = getValidationFromRules(rules, value)
+      return Object.keys(invalid).length === 0 ? null : invalid
     }
     return null
   }
