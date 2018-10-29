@@ -115,7 +115,7 @@ class PhotoList extends React.Component<
         <button onClick={this.decreaseNumberOfPhotos}>-</button>
         <button onClick={this.increaseNumberOfPhotos}>+</button>
         {this.props.photos.slice(0, this.state.numberOfPhotos).map(photo => (
-          <Photo src={photo.url} initialWidth={100} />
+          <Photo src={photo.url} key={photo.id} initialWidth={100} />
         ))}
       </div>
     )
@@ -155,11 +155,11 @@ class App extends React.Component<{}, { photos: Photo[] | null }> {
 
 Certainly there is nothing wrong with this type of division of logic to smaller components and some might even prefer it this way. With declarative approach the code is more condensed and the behavior of the component is more clear at a glance.
 
-And actually in the above case the h1 header is still rendered twice versus the declarative approach where it is only rendered once.
+And actually in the above case the `h1` header is still rendered twice versus the declarative approach where it is only rendered once.
 
 ### Optimization
 
-Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. This same optimization can be achieved with declarative components by using the `Sync.PureVar` component. An additional prop `injection` is provided. `Sync.PureVar` will perfom a check whether this props or the value has changed and opts out of render if not.
+Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. This same optimization can be achieved with declarative components by using the `Sync.PureVar` component. An additional prop `injections` is provided. `Sync.PureVar` will perfom a shallow comparison on the injections prop (In the same way as props are compared in PureComponent) to decide whether it is necessary to render again or not.
 
 ```JSX
 class App extends React.Component {
