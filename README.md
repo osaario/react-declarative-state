@@ -123,6 +123,7 @@ class PhotoList extends React.Component<
 }
 
 class App extends React.Component<{}, { photos: Photo[] | null }> {
+  subscriptions: Subscription[] = []
   state: { photos: Photo[] | null } = { photos: null }
   public render() {
     return (
@@ -137,10 +138,17 @@ class App extends React.Component<{}, { photos: Photo[] | null }> {
       </div>
     )
   }
-  componentDidMount() {
-    Async.GET<Photo[]>("https://jsonplaceholder.typicode.com/photos").subscribe(photos => {
-      this.setState({ photos })
+  componentWillUnmount() {
+    this.subscriptions.forEach(s => {
+      s.unsubscribe()
     })
+  }
+  componentDidMount() {
+    this.subscriptions.push(
+      Async.GET<Photo[]>("https://jsonplaceholder.typicode.com/photos").subscribe(photos => {
+        this.setState({ photos })
+      })
+    )
   }
 }
 ```
