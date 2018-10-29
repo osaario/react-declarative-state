@@ -204,10 +204,9 @@ export namespace Async {
       if (this.state.value) {
         return this.props.children(this.state.value, this.state.asyncState, this.setValue)
       } else {
-        return (
-          this.props.placeholder &&
-          this.props.placeholder(this.state.asyncState.progress as any, this.state.asyncState.type)
-        )
+        return this.props.placeholder
+          ? this.props.placeholder(this.state.asyncState.progress as any, this.state.asyncState.type)
+          : null
       }
     }
     componentWillUnmount() {
