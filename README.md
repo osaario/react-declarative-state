@@ -30,17 +30,10 @@ class App extends React.Component {
                     <div>
                       <button
                         onClick={() => {
-                          setNumberOfPhotos(numberOfPhotos - 1)
-                        }}
-                      >
-                        -
-                      </button>
-                      <button
-                        onClick={() => {
                           setNumberOfPhotos(numberOfPhotos + 1)
                         }}
                       >
-                        +
+                        Show more
                       </button>
                     </div>
                     {photos.slice(0, numberOfPhotos).map(photo => (
@@ -102,18 +95,10 @@ class PhotoList extends React.Component<
       }
     })
   }
-  decreaseNumberOfPhotos = () => {
-    this.setState(({ numberOfPhotos }) => {
-      return {
-        numberOfPhotos: numberOfPhotos - 1
-      }
-    })
-  }
   render() {
     return (
       <div>
-        <button onClick={this.decreaseNumberOfPhotos}>-</button>
-        <button onClick={this.increaseNumberOfPhotos}>+</button>
+        <button onClick={this.increaseNumberOfPhotos}>Show more</button>
         {this.props.photos.slice(0, this.state.numberOfPhotos).map(photo => (
           <Photo src={photo.url} key={photo.id} initialWidth={100} />
         ))}
@@ -159,9 +144,19 @@ And actually in the above case the `h1` header is still rendered twice versus th
 
 ### Optimization
 
-Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. This same optimization can be achieved with declarative components by using the `Sync.PureVar` component. An additional prop `injections` is provided. `Sync.PureVar` will perfom a shallow comparison on the injections prop (In the same way as props are compared in PureComponent) to decide whether it is necessary to render again or not.
+Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. This same optimization can be achieved with declarative components by using the `Sync.PureVar` component. An additional prop `injections` is provided. `Sync.PureVar` will perfom a shallow comparison on the injections prop (In the same way as props are compared in PureComponent) to decide whether it is necessary to render again or not. Injections are injected to the children function.
 
 ```JSX
+const photoChild = (width: number, setWidth: (tab: number) => void, { photo }: { photo: Photo }) => (
+  <img
+    onClick={() => {
+      setWidth(width + 10)
+    }}
+    width={width}
+    src={photo.url}
+  />
+)
+
 class App extends React.Component {
   public render() {
     return (
@@ -170,37 +165,21 @@ class App extends React.Component {
         <Async.Const value={Async.GET<Photo[]>("https://jsonplaceholder.typicode.com/photos")}>
           {photos => (
             <div>
-              <h2>I have {photos.length} photos in total</h2>
               <Sync.Var initialValue={10}>
                 {(numberOfPhotos, setNumberOfPhotos) => (
                   <Fragment>
                     <div>
                       <button
                         onClick={() => {
-                          setNumberOfPhotos(numberOfPhotos - 1)
-                        }}
-                      >
-                        -
-                      </button>
-                      <button
-                        onClick={() => {
                           setNumberOfPhotos(numberOfPhotos + 1)
                         }}
                       >
-                        +
+                        Show more
                       </button>
                     </div>
                     {photos.slice(0, numberOfPhotos).map(photo => (
                       <Sync.PureVar injections={{ photo }} key={photo.id} initialValue={100}>
-                        {(width, setWidth, { photo }) => (
-                          <img
-                            onClick={() => {
-                              setWidth(width + 10)
-                            }}
-                            width={width}
-                            src={photo.url}
-                          />
-                        )}
+                        {photoChild}
                       </Sync.PureVar>
                     ))}
                   </Fragment>
@@ -214,6 +193,8 @@ class App extends React.Component {
   }
 }
 ```
+
+It is a good idea to declare the function for the optimized context outside the class scope to avoid capturing variables from upper scopes. Otherwise it is easy to run into bugs since the children function is not re-called unless injections or value are changed .
 
 ## Examples
 
