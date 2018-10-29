@@ -9,6 +9,7 @@
     "sourceMap": true,
     "declaration": true,
     "experimentalDecorators": true,
+    "preserveConstEnums": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "emitDecoratorMetadata": true,
