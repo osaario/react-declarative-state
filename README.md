@@ -111,7 +111,7 @@ class App extends React.Component {
 
 ### Form
 
-Form is a controlled component that calls onChange on every form submit.
+Form is a controlled component that calls onChange on every form submit. Form supports validation.
 
 ```JSX
 import React, { Fragment } from "react"

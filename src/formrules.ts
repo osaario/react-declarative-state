@@ -17,6 +17,16 @@ export const minLength: ValidationRuleType<number> = (value, ruleValue) => {
   else return { validation: 'error', ruleValue }
 }
 
+export const maxLength: ValidationRuleType<number> = (value, ruleValue) => {
+  if (typeof value !== 'string') {
+    throw Error("Can't have maxLength rule on a non string field")
+  }
+  if (!ruleValue) return null
+  const pass = value.length <= ruleValue
+  if (pass) return null
+  else return { validation: 'error', ruleValue }
+}
+
 export const min: ValidationRuleType<number> = (value, ruleValue) => {
   if (typeof value !== 'number') {
     throw Error("Can't have min rule on a non number field")
@@ -64,4 +74,4 @@ export const phone: ValidationRuleType<boolean> = (value, ruleValue, S) => {
 }
 
 */
-export const formRules = { notEmpty, minLength, min }
+export const formRules = { notEmpty, minLength, min, max, maxLength }

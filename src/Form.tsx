@@ -419,8 +419,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
       this.setState({
         value: L.modify(L.leafs, wrapValue, this.props.value)
       })
-
-      throw Error('Form changed its initial value, this is not allowed')
     }
   }
   render() {
