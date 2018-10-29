@@ -191,8 +191,8 @@ class App extends React.Component {
                       </button>
                     </div>
                     {photos.slice(0, numberOfPhotos).map(photo => (
-                      <Sync.PureVar injection={photo} key={photo.id} initialValue={100}>
-                        {(width, setWidth, photo) => (
+                      <Sync.PureVar injections={{ photo }} key={photo.id} initialValue={100}>
+                        {(width, setWidth, { photo }) => (
                           <img
                             onClick={() => {
                               setWidth(width + 10)

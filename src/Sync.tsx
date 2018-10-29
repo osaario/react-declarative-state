@@ -1,18 +1,25 @@
 import * as React from 'react'
 
 export namespace Sync {
-  export type PureVarProps<T, E> = {
+  export type PureVarProps<T, E extends object> = {
     initialValue: T
-    injection: E
-    children: (value: T, setValue: (tab: T) => void, injection: E) => JSX.Element
+    injections: E
+    children: (value: T, setValue: (tab: T) => void, injections: E) => JSX.Element
   }
   export type PureVarState<T> = {
     value: T
   }
 
-  export class PureVar<T, E> extends React.Component<PureVarProps<T, E>, VarState<T>> {
+  function shallowCompare(newObj: object, prevObj: object) {
+    for (const key in newObj) {
+      if (newObj[key] !== prevObj[key]) return true
+    }
+    return false
+  }
+
+  export class PureVar<T, E extends object> extends React.Component<PureVarProps<T, E>, VarState<T>> {
     shouldComponentUpdate(nextProps: PureVarProps<T, E>, nextState: VarState<T>) {
-      if (this.state.value === nextState.value && this.props.injection === nextProps.injection) {
+      if (this.state.value === nextState.value && !shallowCompare(nextProps.injections, this.props.injections)) {
         return false
       }
       return true
@@ -26,7 +33,7 @@ export namespace Sync {
       })
     }
     render() {
-      return this.props.children(this.state.value, this.setValue, this.props.injection)
+      return this.props.children(this.state.value, this.setValue, this.props.injections)
     }
   }
 
