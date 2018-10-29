@@ -78,6 +78,14 @@ class DataTableBody<T> extends React.PureComponent<
     console.log('render dtablebody')
     const innerHeight = window.innerHeight
     console.log({ innerHeight })
+    const rowsBeforeAndAfter = this.props.anticipateRows || defaultRowsBefore
+    const beforeVisible = Math.max(this.state.firstIndexOnScreen - rowsBeforeAndAfter, 0)
+    const afterVisible = Math.max(this.props.data.length - (this.state.lastIndexOnScreen + rowsBeforeAndAfter + 1), 0)
+    const startIndex = Math.max(0, this.state.firstIndexOnScreen - rowsBeforeAndAfter)
+    const visible = this.props.data.slice(
+      startIndex,
+      Math.min(this.state.lastIndexOnScreen + defaultRowsBefore + 1, this.props.data.length)
+    )
     return (
       <tbody
         style={{
@@ -88,36 +96,32 @@ class DataTableBody<T> extends React.PureComponent<
         onScroll={this.onScroll}
         ref={this.ref}
       >
-        {_.chain(this.props.data)
-          .map((data, idx) => {
-            return { data, idx }
-          })
-          .groupBy(({ idx }) => {
-            const before = idx < this.state.firstIndexOnScreen - (this.props.anticipateRows || defaultRowsBefore)
-            const after = idx > this.state.lastIndexOnScreen + (this.props.anticipateRows || defaultRowsBefore)
-            return before ? 'b' : after ? 'a' : 'v'
-          })
-          .map((d, key) => {
-            if (key === 'a' || key === 'b') {
-              const height = d.length * this.props.rowHeight
-              return <div key={key} style={{ height }} />
-            } else {
-              return d.map(dp => (
-                <tr
-                  style={{
-                    display: 'table',
-                    tableLayout: 'fixed',
-                    width: '100%'
-                  }}
-                  key={(dp as any).idx}
-                >
-                  {this.props.children(dp.data)}
-                </tr>
-              ))
-            }
-          })
-          .flatten()
-          .value()}
+        <React.Fragment>
+          <div
+            key="b"
+            style={{
+              height: beforeVisible * this.props.rowHeight
+            }}
+          />
+          {visible.map((data, idx) => (
+            <tr
+              style={{
+                display: 'table',
+                tableLayout: 'fixed',
+                width: '100%'
+              }}
+              key={startIndex + idx}
+            >
+              {this.props.children(data)}
+            </tr>
+          ))}
+          <div
+            key="a"
+            style={{
+              height: afterVisible * this.props.rowHeight
+            }}
+          />
+        </React.Fragment>
       </tbody>
     )
   }
