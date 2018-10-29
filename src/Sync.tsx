@@ -22,34 +22,4 @@ export namespace Sync {
       return this.props.children(this.state.value, this.setValue)
     }
   }
-  export type GuardProps<T> = {
-    initialValue: T
-    children: (
-      Guarded: (props: { children: JSX.Element; name: T }) => JSX.Element | null,
-      setValue: (guard: T) => void
-    ) => JSX.Element
-  }
-  export type GuardState<T> = {
-    value: T
-  }
-
-  export class Guard<T> extends React.Component<GuardProps<T>, GuardState<T>> {
-    state: GuardState<T> = {
-      value: this.props.initialValue
-    }
-    setValue = (value: T) => {
-      this.setState({
-        value
-      })
-    }
-    Guarded = (props: { children: JSX.Element; name: T }) => {
-      if (props.name === this.state.value) {
-        return props.children
-      }
-      return null
-    }
-    render() {
-      return this.props.children(this.Guarded, this.setValue)
-    }
-  }
 }

@@ -188,7 +188,7 @@ export namespace Async {
     setter: (value: T | null) => { operation: Observable<T | null>; type: Type }
     initialValue: Observable<T>
     onChanged?: (value: T | null) => void
-    placeholder?: (progress: Progress.Progressing | Progress.Error) => JSX.Element
+    placeholder?: (progress: Progress.Progressing | Progress.Error, type: Type) => JSX.Element
     children: (data: T, asyncState: State, setValue: (value: T | null) => void) => JSX.Element
   }
 
@@ -214,7 +214,10 @@ export namespace Async {
       if (this.state.value) {
         return this.props.children(this.state.value, this.state.asyncState, this.setValue)
       } else {
-        return this.props.placeholder && this.props.placeholder(this.state.asyncState as any)
+        return (
+          this.props.placeholder &&
+          this.props.placeholder(this.state.asyncState.progress as any, this.state.asyncState.type)
+        )
       }
     }
     componentWillUnmount() {
@@ -249,7 +252,7 @@ export namespace Async {
           .subscribe(value => {
             this.setState({
               asyncState: {
-                progress: Progress.Error,
+                progress: Progress.Normal,
                 type: Type.Load
               },
               value
