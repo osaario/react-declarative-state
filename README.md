@@ -22,41 +22,44 @@ class App extends React.Component {
         <h1>Welcome to my photos</h1>
         <Async.Const value={Async.GET<Photo[]>("https://jsonplaceholder.typicode.com/photos")}>
           {photos => (
-            <Sync.Var initialValue={10}>
-              {(numberOfPhotos, setNumberOfPhotos) => (
-                <Fragment>
-                  <div>
-                    <button
-                      onClick={() => {
-                        setNumberOfPhotos(numberOfPhotos - 1)
-                      }}
-                    >
-                      -
-                    </button>
-                    <button
-                      onClick={() => {
-                        setNumberOfPhotos(numberOfPhotos + 1)
-                      }}
-                    >
-                      +
-                    </button>
-                  </div>
-                  {photos.slice(0, numberOfPhotos).map(photo => (
-                    <Sync.Var key={photo.id} initialValue={100}>
-                      {(width, setWidth) => (
-                        <img
-                          onClick={() => {
-                            setWidth(width + 10)
-                          }}
-                          width={width}
-                          src={photo.url}
-                        />
-                      )}
-                    </Sync.Var>
-                  ))}
-                </Fragment>
-              )}
-            </Sync.Var>
+            <div>
+              <h2>I have {photos.length} photos in total</h2>
+              <Sync.Var initialValue={10}>
+                {(numberOfPhotos, setNumberOfPhotos) => (
+                  <Fragment>
+                    <div>
+                      <button
+                        onClick={() => {
+                          setNumberOfPhotos(numberOfPhotos - 1)
+                        }}
+                      >
+                        -
+                      </button>
+                      <button
+                        onClick={() => {
+                          setNumberOfPhotos(numberOfPhotos + 1)
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+                    {photos.slice(0, numberOfPhotos).map(photo => (
+                      <Sync.Var key={photo.id} initialValue={100}>
+                        {(width, setWidth) => (
+                          <img
+                            onClick={() => {
+                              setWidth(width + 10)
+                            }}
+                            width={width}
+                            src={photo.url}
+                          />
+                        )}
+                      </Sync.Var>
+                    ))}
+                  </Fragment>
+                )}
+              </Sync.Var>
+            </div>
           )}
         </Async.Const>
       </div>
@@ -144,6 +147,8 @@ class App extends React.Component<{}, { photos: Photo[] | null }> {
 
 Certainly there is nothing wrong with this type of division of logic to smaller components and some might even prefer it this way. With declarative approach the code is more condensed and the behavior of the component is more clear at a glance.
 
+And actually in the above case the h1 header is still rendered twice versus the declarative approach where it is only rendered once.
+
 ## Examples
 
 ### DataTable
@@ -165,16 +170,7 @@ interface Photo {
 class App extends React.Component {
   public render() {
     return (
-      <Async.Const
-        placeholder={progress => {
-          if (progress === Async.Progress.Progressing) {
-            return <div>Progressing...</div>
-          } else {
-            return <div style={{ color: "red" }}>Error happened</div>
-          }
-        }}
-        value={Async.GET<Photo[]>("https://jsonplaceholder.typicode.com/photos")}
-      >
+      <Async.Const value={Async.GET<Photo[]>("https://jsonplaceholder.typicode.com/photos")}>
         {photos => (
           <Sync.Var initialValue={colors[0]}>
             {(color, setColor) => (
@@ -263,22 +259,15 @@ interface Post {
 class App extends React.Component {
   public render() {
     return (
-      <Sync.Guard initialValue={"edit" as "edit" | "done"}>
-        {(Tab, setValue) => (
+      <Sync.Var initialValue={"edit" as "edit" | "done"}>
+        {(tab, setTab) => (
           <Fragment>
-            <Tab name="edit">
+            {tab === "edit" && (
               <Async.Var
-                onChange={() => {
+                onChanged={() => {
                   setTimeout(() => {
-                    setValue("done")
+                    setTab("done")
                   }, 2000)
-                }}
-                placeholder={progress => {
-                  if (progress === Async.Progress.Progressing) {
-                    return <div>Loading...</div>
-                  } else {
-                    return <div style={{ color: "red" }}>Error happened</div>
-                  }
                 }}
                 setter={value => {
                   if (value) {
@@ -322,29 +311,95 @@ class App extends React.Component {
                             {({ Root, SubmitButton }) => (
                               <Fragment>
                                 <Root>
-                                  {({ Validated, Input, TextArea }) => (
+                                  {({ Validation, Input, TextArea }, __, onChange) => (
                                     <Fragment>
-                                      <Validated name="title">
-                                        {validation => (
-                                          <div style={{ color: validation ? "red" : undefined }}>
+                                      <Validation for="id">
+                                        {invalid => (
+                                          <div style={{ color: invalid ? "red" : undefined }}>
+                                            <label>Id</label>
+                                            <Input
+                                              type="number"
+                                              onChange={(e: any) => {
+                                                onChange({ id: parseInt(e.target.value, 10) })
+                                              }}
+                                              min={2}
+                                              max={50}
+                                              name="id"
+                                            />
+                                          </div>
+                                        )}
+                                      </Validation>
+                                      <Validation for="userId">
+                                        {invalid => (
+                                          <div style={{ color: invalid ? "red" : undefined }}>
+                                            <label>userId</label>
+                                            <Input
+                                              type="number"
+                                              onChange={(e: any) => {
+                                                onChange({ userId: parseInt(e.target.value, 10) })
+                                              }}
+                                              min={0}
+                                              name="userId"
+                                            />
+                                          </div>
+                                        )}
+                                      </Validation>
+                                      <Validation for="title">
+                                        {invalid => (
+                                          <div style={{ color: invalid ? "red" : undefined }}>
                                             <label>Title</label>
-                                            <Input notEmpty={true} minLength={minLength} name="title" />
-                                            {validation && (
-                                              <span>
-                                                Violates rule: {validation.ruleName} {validation.ruleValue.toString()}
-                                              </span>
-                                            )}
+                                            <Input notEmpty={true} minLength={minLength} maxLength={40} name="title" />
                                           </div>
                                         )}
-                                      </Validated>
-                                      <Validated name="body">
-                                        {validation => (
-                                          <div style={{ color: validation ? "red" : undefined }}>
+                                      </Validation>
+                                      <Validation for="body">
+                                        {invalid => (
+                                          <div style={{ color: invalid ? "red" : undefined }}>
                                             <label>Body</label>
-                                            <TextArea notEmpty={true} rows={5} name="body" />
+                                            <TextArea notEmpty={true} rows={5} maxLength={400} name="body" />
                                           </div>
                                         )}
-                                      </Validated>
+                                      </Validation>
+                                      <table>
+                                        <thead>
+                                          <tr>
+                                            <th>Field name</th>
+                                            {_.keys(formRules).map(ruleName => (
+                                              <th>{ruleName}</th>
+                                            ))}
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {_.map(post, (__, key) => (
+                                            <tr key={key}>
+                                              <Validation for={key as keyof Post}>
+                                                {invalid => (
+                                                  <Fragment>
+                                                    <th>{key}</th>
+                                                    {_.keys(formRules).map(ruleKey => {
+                                                      return (
+                                                        <th key={ruleKey}>
+                                                          {invalid && invalid[ruleKey as keyof typeof formRules] ? (
+                                                            <span style={{ color: "red" }}>
+                                                              ✕{" "}
+                                                              <sub>
+                                                                {invalid[ruleKey as keyof typeof formRules]!.ruleValue}
+                                                              </sub>
+                                                            </span>
+                                                          ) : (
+                                                            <span style={{ color: "green" }}>✔</span>
+                                                          )}
+                                                        </th>
+                                                      )
+                                                    })}
+                                                  </Fragment>
+                                                )}
+                                              </Validation>
+                                              <th />
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
                                     </Fragment>
                                   )}
                                 </Root>
@@ -358,13 +413,11 @@ class App extends React.Component {
                   </p>
                 )}
               </Async.Var>
-            </Tab>
-            <Tab name="done">
-              <p>Edit success</p>
-            </Tab>
+            )}
+            {tab === "done" && <p>Edit success</p>}
           </Fragment>
         )}
-      </Sync.Guard>
+      </Sync.Var>
     )
   }
 }
