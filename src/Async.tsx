@@ -30,8 +30,6 @@ export namespace Async {
 
   export type Data<T> = { data: T; state: State }
 
-  export type ObservableOperation<E> = Observable<E>
-
   export function create<T>(data: T, type: Type, initialProgress = Progress.Normal): Data<T> {
     return {
       data,
@@ -65,64 +63,56 @@ export namespace Async {
     'Content-Type': 'application/json'
   }
 
-  export function GET<T>(url: string) {
-    return Observable.fromPromise(
-      fetch(url, {
-        method: 'GET',
-        headers: { ...headers }
-      }).then(response => {
-        if (response.ok) {
-          return response.json()
-        }
-        throw Error(response.status.toString())
-      })
-    ) as Observable<T>
+  export function GET<T>(url: string): Promise<T> {
+    return fetch(url, {
+      method: 'GET',
+      headers: { ...headers }
+    }).then(response => {
+      if (response.ok) {
+        return response.json()
+      }
+      throw Error(response.status.toString())
+    })
   }
 
-  export function DELETE(url: string): Observable<null> {
-    return Observable.fromPromise(
-      fetch(url, {
-        method: 'DELETE',
-        headers: { ...headers }
-      }).then(response => {
-        if (response.ok) {
-          return null
-        }
-        throw Error(response.status.toString())
-      })
-    )
+  export function DELETE(url: string): Promise<null> {
+    return fetch(url, {
+      method: 'DELETE',
+      headers: { ...headers }
+    }).then(response => {
+      if (response.ok) {
+        return null
+      }
+      throw Error(response.status.toString())
+    })
   }
 
-  export function POST<T>(url: string, data: T) {
-    return Observable.fromPromise(
-      fetch(url, {
-        method: 'POST',
-        headers: { ...headers },
-        body: JSON.stringify(data)
-      }).then(response => {
-        if (response.ok) {
-          if (response.status === 204) return response.status
-          return response.json()
-        }
-        throw Error(response.status.toString())
-      })
-    )
+  export function POST<T>(url: string, data: T): Promise<T> {
+    return fetch(url, {
+      method: 'POST',
+      headers: { ...headers },
+      body: JSON.stringify(data)
+    }).then(response => {
+      if (response.ok) {
+        if (response.status === 204) return response.status
+        return response.json()
+      }
+      throw Error(response.status.toString())
+    })
   }
 
-  export function PUT<T>(url: string, data: T) {
-    return Observable.fromPromise(
-      fetch(url, {
-        method: 'PUT',
-        headers: { ...headers },
-        body: JSON.stringify(data)
-      }).then(response => {
-        if (response.ok) {
-          if (response.status === 204) return response.status
-          return response.json()
-        }
-        throw Error(response.status.toString())
-      })
-    )
+  export function PUT<T>(url: string, data: T): Promise<T> {
+    return fetch(url, {
+      method: 'PUT',
+      headers: { ...headers },
+      body: JSON.stringify(data)
+    }).then(response => {
+      if (response.ok) {
+        if (response.status === 204) return response.status
+        return response.json()
+      }
+      throw Error(response.status.toString())
+    })
   }
   export interface ConstSharedProps {
     approxMS?: number
@@ -133,7 +123,7 @@ export namespace Async {
   }
 
   export interface ConstProps<T> extends ConstSharedProps {
-    value: Observable<T>
+    value: Promise<T>
     children: (data: T, progress: Progress) => JSX.Element
     placeholder?: (progress: Progress.Progressing | Progress.Error) => JSX.Element
   }
@@ -168,7 +158,7 @@ export namespace Async {
           })
           .startWith(0)
           .switchMap(() => {
-            return this.props.value.catch(() => {
+            return Observable.fromPromise(this.props.value).catch(() => {
               this.setState({
                 value: setProgress(this.state.value, Progress.Error)
               })
@@ -185,8 +175,8 @@ export namespace Async {
     }
   }
   export interface VarProps<T> {
-    setter: (value: T | null) => { operation: Observable<T | null>; type: Type }
-    initialValue: Observable<T>
+    setter: (value: T | null) => { operation: Promise<T | null>; type: Type }
+    initialValue: Promise<T>
     onChanged?: (value: T | null) => void
     placeholder?: (progress: Progress.Progressing | Progress.Error, type: Type) => JSX.Element
     children: (data: T, asyncState: State, setValue: (value: T | null) => void) => JSX.Element
@@ -238,7 +228,7 @@ export namespace Async {
           })
           .startWith(0)
           .switchMap(() => {
-            return this.props.initialValue.catch(() => {
+            return Observable.fromPromise(this.props.initialValue).catch(() => {
               this.setState({
                 asyncState: {
                   progress: Progress.Error,
@@ -270,7 +260,7 @@ export namespace Async {
           })
         })
         .switchMap(operation => {
-          return operation.operation.catch(() => {
+          return Observable.fromPromise(operation.operation).catch(() => {
             this.setState({
               asyncState: {
                 progress: Progress.Error,

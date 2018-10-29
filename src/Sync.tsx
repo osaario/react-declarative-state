@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { shallowCompareInjections } from './injections'
 
 export namespace Sync {
   export type PureVarProps<T, E extends object> = {
@@ -10,16 +11,12 @@ export namespace Sync {
     value: T
   }
 
-  function shallowCompare(newObj: object, prevObj: object) {
-    for (const key in newObj) {
-      if (newObj[key] !== prevObj[key]) return true
-    }
-    return false
-  }
-
   export class PureVar<T, E extends object> extends React.Component<PureVarProps<T, E>, VarState<T>> {
     shouldComponentUpdate(nextProps: PureVarProps<T, E>, nextState: VarState<T>) {
-      if (this.state.value === nextState.value && !shallowCompare(nextProps.injections, this.props.injections)) {
+      if (
+        this.state.value === nextState.value &&
+        !shallowCompareInjections(nextProps.injections, this.props.injections)
+      ) {
         return false
       }
       return true
