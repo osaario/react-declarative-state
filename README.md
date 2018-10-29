@@ -8,12 +8,6 @@ Declarative JSX components developed for Timma SaaS client codebase
 npm install declarative-components
 ```
 
-## Acknowledgements
-
-Library boilerplate starter: https://github.com/alexjoverm/typescript-library-starter
-
-## Dependencies
-
 ## Examples
 
 ### DataTable
@@ -239,3 +233,9 @@ class App extends React.Component {
   }
 }
 ```
+
+## Acknowledgements
+
+Library boilerplate starter: https://github.com/alexjoverm/typescript-library-starter
+
+## Dependencies
