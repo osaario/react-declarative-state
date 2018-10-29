@@ -142,7 +142,7 @@ class App extends React.Component<{}, { photos: Photo[] | null }> {
 }
 ```
 
-Now although there is nothing wrong with this type of division of logic to smaller components and some might even prefer it this way. With declarative approach the code is more condensed and the behavior of the component is more clear at a glance.
+Certainly there is nothing wrong with this type of division of logic to smaller components and some might even prefer it this way. With declarative approach the code is more condensed and the behavior of the component is more clear at a glance.
 
 ## Examples
 
