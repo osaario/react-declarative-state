@@ -2,6 +2,12 @@
 
 Declarative JSX components developed for Timma SaaS client codebase
 
+## Installation
+
+```
+npm install declarative-components
+```
+
 ## Acknowledgements
 
 Library boilerplate starter: https://github.com/alexjoverm/typescript-library-starter
