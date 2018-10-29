@@ -120,6 +120,7 @@ function getValidationFromRules(rules: any, value: any) {
     const validation = (formRules as any)[rule as keyof typeof formRules](value, ruleValue as any)
     return validation
   })
+  // TODO: Add so that returns all validations that have not passed, not just the first one
   const invalid = _.toPairs(validationsForField).filter(arr => !!arr[1])
   if (invalid.length > 0) {
     return invalid[0][1] as Validation

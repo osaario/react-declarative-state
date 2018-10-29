@@ -134,18 +134,18 @@ export namespace Async {
 
   export interface ConstProps<T> extends ConstSharedProps {
     value: Observable<T>
-    children: (data: T, progress: Async.Progress) => JSX.Element
-    placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
+    children: (data: T, progress: Progress) => JSX.Element
+    placeholder?: (progress: Progress.Progressing | Progress.Error) => JSX.Element
   }
 
   export interface ConstState<T> {
-    value: Async.Data<T | null>
+    value: Data<T | null>
   }
 
   export class Const<T> extends React.Component<ConstProps<T>, ConstState<T>> {
     subscriptions: Subscription[] = []
     state: ConstState<T> = {
-      value: Async.create(null, Async.Type.Load, Async.Progress.Progressing)
+      value: create(null, Type.Load, Progress.Progressing)
     }
     render() {
       if (!this.state.value.data) {
@@ -163,14 +163,14 @@ export namespace Async {
         Observable.of(0)
           .do(() => {
             this.setState({
-              value: Async.setProgress(this.state.value, Async.Progress.Progressing)
+              value: setProgress(this.state.value, Progress.Progressing)
             })
           })
           .startWith(0)
           .switchMap(() => {
             return this.props.value.catch(() => {
               this.setState({
-                value: Async.setProgress(this.state.value, Async.Progress.Error)
+                value: setProgress(this.state.value, Progress.Error)
               })
               return Observable.of(null)
             })
@@ -178,23 +178,23 @@ export namespace Async {
           .filter(x => !!x)
           .subscribe(value => {
             this.setState({
-              value: Async.set(this.state.value, value!, Async.Progress.Done)
+              value: set(this.state.value, value!, Progress.Done)
             })
           })
       )
     }
   }
   export interface VarProps<T> {
-    setter: (value: T | null) => { operation: Observable<T | null>; type: Async.Type }
+    setter: (value: T | null) => { operation: Observable<T | null>; type: Type }
     initialValue: Observable<T>
-    onChange?: (value: T | null) => void
-    placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
-    children: (data: T, asyncState: Async.State, setValue: (value: T | null) => void) => JSX.Element
+    onChanged?: (value: T | null) => void
+    placeholder?: (progress: Progress.Progressing | Progress.Error) => JSX.Element
+    children: (data: T, asyncState: State, setValue: (value: T | null) => void) => JSX.Element
   }
 
   export interface VarState<T> {
     value: T | null
-    asyncState: Async.State
+    asyncState: State
   }
 
   export class Var<T> extends React.Component<VarProps<T>, VarState<T>> {
@@ -202,8 +202,8 @@ export namespace Async {
     submitSubject = new Subject<T | null>()
     state: VarState<T> = {
       asyncState: {
-        progress: Async.Progress.Normal,
-        type: Async.Type.Load
+        progress: Progress.Normal,
+        type: Type.Load
       },
       value: null
     }
@@ -228,8 +228,8 @@ export namespace Async {
           .do(() => {
             this.setState({
               asyncState: {
-                progress: Async.Progress.Progressing,
-                type: Async.Type.Load
+                progress: Progress.Progressing,
+                type: Type.Load
               }
             })
           })
@@ -238,8 +238,8 @@ export namespace Async {
             return this.props.initialValue.catch(() => {
               this.setState({
                 asyncState: {
-                  progress: Async.Progress.Error,
-                  type: Async.Type.Load
+                  progress: Progress.Error,
+                  type: Type.Load
                 }
               })
               return Observable.of(null)
@@ -249,8 +249,8 @@ export namespace Async {
           .subscribe(value => {
             this.setState({
               asyncState: {
-                progress: Async.Progress.Error,
-                type: Async.Type.Load
+                progress: Progress.Error,
+                type: Type.Load
               },
               value
             })
@@ -261,7 +261,7 @@ export namespace Async {
         .do(operation => {
           this.setState({
             asyncState: {
-              progress: Async.Progress.Progressing,
+              progress: Progress.Progressing,
               type: operation.type
             }
           })
@@ -270,7 +270,7 @@ export namespace Async {
           return operation.operation.catch(() => {
             this.setState({
               asyncState: {
-                progress: Async.Progress.Error,
+                progress: Progress.Error,
                 type: operation.type
               }
             })
@@ -284,12 +284,12 @@ export namespace Async {
             {
               value,
               asyncState: {
-                progress: Async.Progress.Normal,
-                type: Async.Type.Load
+                progress: Progress.Normal,
+                type: Type.Load
               }
             },
             () => {
-              if (this.props.onChange) this.props.onChange(value)
+              if (this.props.onChanged) this.props.onChanged(value)
             }
           )
         })
@@ -310,7 +310,7 @@ export namespace Async {
   export class ObsLoader<T> extends React.Component<ObsLoaderProps<T>, ObsLoaderState<T>> {
     subscriptions: Subscription[] = []
     state: ObsLoaderState<T> = {
-      value: Async.create(null, Async.Type.Load, Async.Progress.Progressing)
+      value: Async.create(null, Async.Type.Load, Progress.Progressing)
     }
     render() {
       if (!this.state.value.data) {
@@ -321,7 +321,7 @@ export namespace Async {
       }
       return (
         <ProgressContainer
-          progressing={this.state.value.state.progress === Async.Progress.Progressing}
+          progressing={this.state.value.state.progress === Progress.Progressing}
         >
           {this.props.children(this.state.value.data)}
         </ProgressContainer>
@@ -337,13 +337,13 @@ export namespace Async {
         this.props.trigger
           .do(() => {
             this.setState({
-              value: Async.setProgress(this.state.value, Async.Progress.Progressing)
+              value: Async.setProgress(this.state.value, Progress.Progressing)
             })
           })
           .switchMap(operation => {
             return operation.catch(() => {
               this.setState({
-                value: Async.setProgress(this.state.value, Async.Progress.Error)
+                value: Async.setProgress(this.state.value, Progress.Error)
               })
               return Observable.of(null)
             })
@@ -351,7 +351,7 @@ export namespace Async {
           .filter(x => !!x)
           .subscribe(value => {
             this.setState({
-              value: Async.set(this.state.value, value!, Async.Progress.Done)
+              value: Async.set(this.state.value, value!, Progress.Done)
             })
           })
       )
