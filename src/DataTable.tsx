@@ -75,9 +75,6 @@ class DataTableBody<T> extends React.PureComponent<
     })
   }
   render() {
-    console.log('render dtablebody')
-    const innerHeight = window.innerHeight
-    console.log({ innerHeight })
     const rowsBeforeAndAfter = this.props.anticipateRows || defaultRowsBefore
     const beforeVisible = Math.max(this.state.firstIndexOnScreen - rowsBeforeAndAfter, 0)
     const afterVisible = Math.max(this.props.data.length - (this.state.lastIndexOnScreen + rowsBeforeAndAfter + 1), 0)
@@ -202,9 +199,7 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
     })
   }
   onSortFieldClick = (sortField: keyof T) => {
-    // console.log(sortField, this.state.sortField)
     if (sortField === this.state.sortField) {
-      // console.log("do the fucckkin toggle")
       this.setState(
         {
           sortDirection: this.state.sortDirection === 'asc' ? 'desc' : 'asc'
@@ -237,7 +232,6 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
   }
   reSortAndGroup() {
     let sortedData = this.props.data.slice()
-    // console.log("update")
     if (this.state.searchString.length > 0) {
       sortedData = sortedData.filter((d: any) => {
         const a = _.map(d, val => {
@@ -256,7 +250,6 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
       sortedData = _.sortBy(sortedData, this.state.sortField)
     }
     sortedData = this.state.sortDirection === 'asc' ? sortedData : _.reverse(sortedData)
-    // console.log(sortedData)
     this.setState(
       {
         sortedData
@@ -268,7 +261,6 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
   }
   componentDidUpdate(prevProps: any) {
     if (this.props.data !== prevProps.data) {
-      //  console.log(this.props.data)
       this.reSortAndGroup()
     }
   }
