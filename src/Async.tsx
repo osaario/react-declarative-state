@@ -149,7 +149,7 @@ export namespace Async {
     }
     render() {
       if (!this.state.value.data) {
-        return this.props.placeholder && this.props.placeholder(this.state.value.state.progress as any)
+        return this.props.placeholder ? this.props.placeholder(this.state.value.state.progress as any) : null
       }
       return this.props.children(this.state.value.data, this.state.value.state.progress)
     }
