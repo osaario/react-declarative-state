@@ -157,6 +157,64 @@ Certainly there is nothing wrong with this type of division of logic to smaller 
 
 And actually in the above case the h1 header is still rendered twice versus the declarative approach where it is only rendered once.
 
+### Optimization
+
+Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. This same optimization can be achieved with declarative components by using the `Sync.PureVar` component. An additional prop `injection` is provided. `Sync.PureVar` will perfom a check whether this props or the value has changed and opts out of render if not.
+
+```JSX
+class App extends React.Component {
+  public render() {
+    return (
+      <div>
+        <h1>Welcome to my photos</h1>
+        <Async.Const value={Async.GET<Photo[]>("https://jsonplaceholder.typicode.com/photos")}>
+          {photos => (
+            <div>
+              <h2>I have {photos.length} photos in total</h2>
+              <Sync.Var initialValue={10}>
+                {(numberOfPhotos, setNumberOfPhotos) => (
+                  <Fragment>
+                    <div>
+                      <button
+                        onClick={() => {
+                          setNumberOfPhotos(numberOfPhotos - 1)
+                        }}
+                      >
+                        -
+                      </button>
+                      <button
+                        onClick={() => {
+                          setNumberOfPhotos(numberOfPhotos + 1)
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
+                    {photos.slice(0, numberOfPhotos).map(photo => (
+                      <Sync.PureVar injection={photo} key={photo.id} initialValue={100}>
+                        {(width, setWidth, photo) => (
+                          <img
+                            onClick={() => {
+                              setWidth(width + 10)
+                            }}
+                            width={width}
+                            src={photo.url}
+                          />
+                        )}
+                      </Sync.PureVar>
+                    ))}
+                  </Fragment>
+                )}
+              </Sync.Var>
+            </div>
+          )}
+        </Async.Const>
+      </div>
+    )
+  }
+}
+```
+
 ## Examples
 
 ### DataTable
