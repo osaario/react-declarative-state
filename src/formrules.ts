@@ -17,6 +17,24 @@ export const minLength: ValidationRuleType<number> = (value, ruleValue) => {
   else return { validation: 'error', ruleValue }
 }
 
+export const min: ValidationRuleType<number> = (value, ruleValue) => {
+  if (typeof value !== 'number') {
+    throw Error("Can't have min rule on a non number field")
+  }
+  const pass = value >= ruleValue
+  if (pass) return null
+  else return { validation: 'error', ruleValue }
+}
+
+export const max: ValidationRuleType<number> = (value, ruleValue) => {
+  if (typeof value !== 'number') {
+    throw Error("Can't have min rule on a non number field")
+  }
+  const pass = value <= ruleValue
+  if (pass) return null
+  else return { validation: 'error', ruleValue }
+}
+
 export interface Validation {
   validation: 'error'
   ruleValue: string | number | boolean
@@ -24,11 +42,6 @@ export interface Validation {
 
 /*
 
-export const min: ValidationRuleType<number> = (value, ruleValue, S) => {
-  const pass = value >= ruleValue
-  if (pass) return null
-  else return { validation: 'error', description: `${S.VALUE_TOO_SMALL} (min. ${ruleValue})` }
-}
 
 export const max: ValidationRuleType<number> = (value, ruleValue, S) => {
   const pass = value <= ruleValue
@@ -51,4 +64,4 @@ export const phone: ValidationRuleType<boolean> = (value, ruleValue, S) => {
 }
 
 */
-export const formRules = { notEmpty, minLength }
+export const formRules = { notEmpty, minLength, min }

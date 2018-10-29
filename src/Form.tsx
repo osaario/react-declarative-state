@@ -1,6 +1,5 @@
 import * as React from 'react'
 import * as _ from 'lodash'
-import { findDOMNode } from 'react-dom'
 import { formRules, ValidationRuleType, Validation } from './formrules'
 import { ProgressButtonProps, ProgressButton } from './ProgressButton'
 const L: any = require('partial.lenses')
@@ -15,8 +14,8 @@ export type ValidationGroup = { [K in keyof typeof formRules]?: Validation }
 export type ErrorLabelProps<T> = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLDivElement>, HTMLDivElement> & {
   name: keyof T
 }
-export type ValidatedProps<T> = {
-  name: keyof T
+export type ValidationProps<T> = {
+  for: keyof T
   children: (validation: ValidationGroup | null) => JSX.Element
 }
 export type TextAreaProps<T> = _.Omit<
@@ -53,7 +52,7 @@ export interface FormScopeSharedPublicProps<T> {
       ) => JSX.Element | null
       Input: (props: InputProps<T>) => JSX.Element
       TextArea: (props: TextAreaProps<T>) => JSX.Element
-      Validated: (props: ValidatedProps<T>) => JSX.Element
+      Validation: (props: ValidationProps<T>) => JSX.Element
     },
     value: T,
     handleFieldChange: (e: FormEventType<T>) => void
@@ -100,6 +99,7 @@ class InputInner extends React.Component<
 > {
   ref = React.createRef<any>()
   render() {
+    console.log(this.props.name, this.ref)
     if (this.props._textArea) {
       return <textarea ref={this.ref as any} {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea'])} />
     } else {
@@ -187,8 +187,8 @@ export class FormScope<T, S extends keyof T> extends React.Component<
       />
     )
   }
-  Validated = (props: ValidatedProps<T[S]>) => {
-    const validation = this.getValidationForField(this.getLensPathForField(props.name))
+  Validation = (props: ValidationProps<T[S]>) => {
+    const validation = this.getValidationForField(this.getLensPathForField(props.for))
     return props.children(validation)
   }
   TextArea = (props: TextAreaProps<T[S]>) => {
@@ -210,9 +210,11 @@ export class FormScope<T, S extends keyof T> extends React.Component<
         {..._.omit(_.omit(props, 'ref'), _.keys(formRules))}
         key={JSON.stringify(lensPath) + JSON.stringify(rules)}
         onDidMount={ref => {
+          console.log('insert rules', props.name, ref)
           this.props.onInsertRule(lensPath, rules, ref)
         }}
         onWillUnmount={() => {
+          console.log('remove rules', props.name)
           this.props.onRemoveRule(lensPath)
         }}
         onBlur={() => {
@@ -270,7 +272,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
           {
             Input: this.Input,
             TextArea: this.TextArea,
-            Validated: this.Validated,
+            Validation: this.Validation,
             Sub: this.Sub
           },
           L.modify(wrappedValues, unWrapValue, this.props.rootValue[this.props.scope]),
@@ -432,20 +434,17 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
           const invalidFieldsLens = L.compose(
             wrappedValues,
             L.when((wv: any) => {
-              return wv.rules && getValidationFromRules(wv.rules, wv.value)
+              const validation = getValidationFromRules(wv.rules, wv.value)
+              return wv.rules && Object.keys(validation).length > 0
             })
           )
           const invalidFields = L.collect(invalidFieldsLens, this.state)
           console.log('invalid', invalidFields)
           if (invalidFields.length > 0) {
-            this.setState(
-              state => {
-                return L.set([invalidFieldsLens, 'touched'], true, state)
-              },
-              () => {
-                ;(findDOMNode(invalidFields[0].ref.current)! as any).focus()
-              }
-            )
+            invalidFields[0].ref.current.focus()
+            this.setState(state => {
+              return L.set([invalidFieldsLens, 'touched'], true, state)
+            })
           } else {
             this.props.onChange(L.modify(wrappedValues, unWrapValue, this.state.value))
           }
