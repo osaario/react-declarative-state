@@ -1,6 +1,6 @@
 # Declarative Components
 
-Declarative JSX components developed for Timma SaaS client codebase.
+Declarative Components for React.
 
 ## Installation
 
@@ -178,9 +178,7 @@ class App extends React.Component {
                       </button>
                     </div>
                     {photos.slice(0, numberOfPhotos).map(photo => (
-                      <Sync.PureVar injections={{ photo }} key={photo.id} initialValue={100}>
-                        {photoChild}
-                      </Sync.PureVar>
+                      <Sync.PureVar children={photoChild} injections={{ photo }} key={photo.id} initialValue={100} />
                     ))}
                   </Fragment>
                 )}
