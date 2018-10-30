@@ -300,7 +300,7 @@ export namespace Async {
   }
 
   export interface ArrayState<T> {
-    value: { item: T; progress: Progress }[] | null
+    value: { item: T; progress: Progress; setItem: (value: T) => void }[] | null
     allProgress: Progress
   }
 
@@ -319,9 +319,7 @@ export namespace Async {
       if (this.state.value) {
         return this.state.value.map((value, idx) => (
           <React.Fragment key={this.props.childKey ? value.item[this.props.childKey].toString() : idx.toString()}>
-            {this.props.children(value.item, value.progress, (value: T) => {
-              this.setItem(value, idx)
-            })}
+            {this.props.children(value.item, value.progress, value.setItem)}
           </React.Fragment>
         ))
       } else {
@@ -367,10 +365,13 @@ export namespace Async {
           .subscribe(value => {
             this.setState({
               allProgress: Progress.Normal,
-              value: value!.map(v => {
+              value: value!.map((v, idx) => {
                 return {
                   item: v,
-                  progress: Progress.Normal
+                  progress: Progress.Normal,
+                  setItem: (value: T) => {
+                    this.setItem(value, idx)
+                  }
                 }
               })
             })
@@ -425,7 +426,13 @@ export namespace Async {
                 value: state.value!.map(
                   (v, idx) =>
                     this.areItemsEqual(value!.item, value!.idx, v.item, idx)
-                      ? { item: value!.item, progress: Progress.Normal }
+                      ? {
+                          item: value!.item,
+                          progress: Progress.Normal,
+                          setItem: (value: T) => {
+                            this.setItem(value, idx)
+                          }
+                        }
                       : v
                 )!
               }
