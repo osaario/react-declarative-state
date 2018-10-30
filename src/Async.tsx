@@ -294,6 +294,7 @@ export namespace Async {
   export interface ArrayProps<T> {
     itemSetter: (value: T) => Promise<T>
     getter: () => Promise<T[]>
+    childKey?: keyof T
     placeholder?: (progress: Progress) => JSX.Element
     children: (data: T, progress: Progress, setItem: (value: T) => void) => JSX.Element
   }
@@ -316,11 +317,13 @@ export namespace Async {
     }
     render() {
       if (this.state.value) {
-        return this.state.value.map((value, idx) => {
-          return this.props.children(value.item, value.progress, (value: T) => {
-            this.setItem(value, idx)
-          })
-        })
+        return this.state.value.map((value, idx) => (
+          <React.Fragment key={this.props.childKey ? value.item[this.props.childKey].toString() : idx.toString()}>
+            {this.props.children(value.item, value.progress, (value: T) => {
+              this.setItem(value, idx)
+            })}
+          </React.Fragment>
+        ))
       } else {
         return this.props.placeholder ? this.props.placeholder(this.state.allProgress) : null
       }
@@ -333,6 +336,13 @@ export namespace Async {
     componentDidUpdate(prevProps: ArrayProps<T>) {
       if (this.props.getter !== prevProps.getter) {
         this.loadSubject.next()
+      }
+    }
+    areItemsEqual = (item1: T, idx1: number, item2: T, idx2: number) => {
+      if (this.props.childKey) {
+        return item1[this.props.childKey] === item2[this.props.childKey]
+      } else {
+        return idx1 === idx2
       }
     }
     componentDidMount() {
@@ -372,7 +382,7 @@ export namespace Async {
             this.setState(state => {
               return {
                 value: state.value!.map((v, idx) => {
-                  if (idx === item.idx) {
+                  if (this.areItemsEqual(item.item, item.idx, v.item, idx)) {
                     return {
                       ...v,
                       progress: Progress.Progressing
@@ -395,7 +405,7 @@ export namespace Async {
                 this.setState(state => {
                   return {
                     value: state.value!.map((v, idx) => {
-                      if (idx === value.idx) {
+                      if (this.areItemsEqual(value.item, value.idx, v.item, idx)) {
                         return {
                           ...v,
                           progress: Progress.Error
@@ -413,7 +423,10 @@ export namespace Async {
             this.setState(state => {
               return {
                 value: state.value!.map(
-                  (v, idx) => (value!.idx === idx ? { item: value!.item, progress: Progress.Normal } : v)
+                  (v, idx) =>
+                    this.areItemsEqual(value!.item, value!.idx, v.item, idx)
+                      ? { item: value!.item, progress: Progress.Normal }
+                      : v
                 )!
               }
             })
