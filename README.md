@@ -59,7 +59,7 @@ const App = () => (
 )
 ```
 
-To accomplish this kind of behavior in the traditional React style we would have to create *stateful* subcomponents for rendering the photo and also for rendering the list.
+To accomplish this kind of behavior in the traditional React style we would have to create _stateful_ subcomponents for rendering the photo and also for rendering the list.
 
 ```JSX
 import { Async } from "declarative-components"
@@ -182,7 +182,7 @@ It is a good idea to declare the function for the optimized context outside the 
 
 ### Drop-In Asynchronous
 
-Asynchronous `Var` and `Const` components let you define getters and setters (`Var`) as Promises. 
+Asynchronous `Var` and `Const` components let you define getters and setters (`Var`) as Promises.
 
 ```JSX
 import { Sync, Async, Form } from "declarative-components"
@@ -249,7 +249,7 @@ const App = () => (
 
 ### Non-opinionated on visual representation
 
-Although the components carry powerful abstractions they do not take any opinion on what the components look like. In this example the *virtualized* `DataTable` can be made to look exactly like you want.
+Although the components carry powerful abstractions they do not take any opinion on what the components look like. In this example the _virtualized_ `DataTable` can be made to look exactly like you want.
 
 ```JSX
 import { DataTable, Sync, Async } from "declarative-components"
@@ -299,6 +299,70 @@ const App = () => (
       </DataTable>
     )}
   </Async.Const>
+)
+```
+
+### Flexible
+
+Easily manage an array of forms with simple concise logic
+
+```JSX
+interface Post {
+  userId: number
+  id: number
+  title: string
+  body: string
+}
+
+const postChild = ({
+  post,
+  progress,
+  setPost
+}: {
+  post: Post
+  progress: Async.Progress
+  setPost: (value: Post) => void
+}) => (
+  <Form value={post} onChange={setPost}>
+    {({ Root }) => (
+      <Fragment>
+        <Root>
+          {({ Input, TextArea, Validation }) => (
+            <Fragment>
+              <Validation for="title">
+                {validation => (
+                  <span style={{ color: validation ? "red" : undefined }}>
+                    <label>Todo title</label>
+                    <Input notEmpty={true} maxLength={100} name="title" />
+                  </span>
+                )}
+              </Validation>
+              <Validation for="body">
+                {validation => (
+                  <span style={{ color: validation ? "red" : undefined }}>
+                    <label>Todo title</label>
+                    <TextArea minLength={10} notEmpty={true} maxLength={10000} name="body" />
+                  </span>
+                )}
+              </Validation>
+            </Fragment>
+          )}
+        </Root>
+        <button type="submit" disabled={progress === Async.Progress.Progressing}>
+          Save Todo
+        </button>
+      </Fragment>
+    )}
+  </Form>
+)
+const App = () => (
+  <Async.Array
+    childKey="id"
+    getter={() => Async.GET<Post[]>("https://jsonplaceholder.typicode.com/posts/").then(posts => posts.splice(0, 10))}
+    itemSetter={post => Async.PUT<Post>("https://jsonplaceholder.typicode.com/todos/" + post.id, post)}
+  >
+    {(post, progress, setPost) => <Sync.PureScope children={postChild} injections={{ post, progress, setPost }} />}
+  </Async.Array>
 )
 ```
 
