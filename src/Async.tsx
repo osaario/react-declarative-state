@@ -292,7 +292,7 @@ export namespace Async {
     }
   }
   export interface ArrayProps<T> {
-    itemSetter: (value: T) => Promise<T>
+    itemSetter?: (value: T) => Promise<T>
     getter: () => Promise<T[]>
     childKey?: keyof T
     placeholder?: (progress: Progress) => JSX.Element
@@ -395,7 +395,7 @@ export namespace Async {
             })
           })
           .flatMap(value => {
-            return Observable.fromPromise(this.props.itemSetter(value.item))
+            return Observable.fromPromise(this.props.itemSetter!(value.item))
               .map(item => {
                 return {
                   idx: value.idx,
