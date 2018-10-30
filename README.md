@@ -10,6 +10,8 @@ npm install declarative-components
 
 ## Why?
 
+### Cohesive UI:s
+
 Easily compose complex UI:s with declarative components. Instead of storing the state in the component the state is stored internally inside the declarative components. This way a change to variable is reflected only to children without the need to re-render the whole root component.
 
 ```JSX
@@ -178,7 +180,9 @@ const App = () => (
 
 It is a good idea to declare the function for the optimized context outside the class scope to avoid capturing variables from upper scopes. Otherwise it is easy to run into bugs since the children function is not re-called unless injections or value are changed .
 
-### Drop-In Asynchronicity
+### Drop-In Asynchronous
+
+Asynchronous `Var` and `Const` components let you define getters and setters (`Var`) as Promises. 
 
 ```JSX
 import { Sync, Async, Form } from "declarative-components"
