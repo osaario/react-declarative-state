@@ -291,4 +291,134 @@ export namespace Async {
       )
     }
   }
+  export interface ArrayProps<T> {
+    itemSetter: (value: T) => Promise<T>
+    getter: () => Promise<T[]>
+    placeholder?: (progress: Progress) => JSX.Element
+    children: (data: T, progress: Progress, setItem: (value: T) => void) => JSX.Element
+  }
+
+  export interface ArrayState<T> {
+    value: { item: T; progress: Progress }[] | null
+    allProgress: Progress
+  }
+
+  export class Array<T> extends React.Component<ArrayProps<T>, ArrayState<T>> {
+    subscriptions: Subscription[] = []
+    itemSubmitSubject = new Subject<{ item: T; idx: number }>()
+    loadSubject = new Subject()
+    state: ArrayState<T> = {
+      allProgress: Progress.Normal,
+      value: null
+    }
+    setItem = (value: T, idx: number) => {
+      this.itemSubmitSubject.next({ item: value, idx })
+    }
+    render() {
+      if (this.state.value) {
+        return this.state.value.map((value, idx) => {
+          return this.props.children(value.item, value.progress, (value: T) => {
+            this.setItem(value, idx)
+          })
+        })
+      } else {
+        return this.props.placeholder ? this.props.placeholder(this.state.allProgress) : null
+      }
+    }
+    componentWillUnmount() {
+      this.subscriptions.forEach(s => {
+        s.unsubscribe()
+      })
+    }
+    componentDidUpdate(prevProps: ArrayProps<T>) {
+      if (this.props.getter !== prevProps.getter) {
+        this.loadSubject.next()
+      }
+    }
+    componentDidMount() {
+      this.subscriptions.push(
+        this.loadSubject
+          .startWith(0)
+          .do(() => {
+            this.setState({
+              allProgress: Progress.Progressing
+            })
+          })
+          .startWith(0)
+          .switchMap(() => {
+            return Observable.fromPromise(this.props.getter()).catch(() => {
+              this.setState({
+                allProgress: Progress.Error
+              })
+              return Observable.of(null)
+            })
+          })
+          .filter(x => !!x)
+          .subscribe(value => {
+            this.setState({
+              allProgress: Progress.Normal,
+              value: value!.map(v => {
+                return {
+                  item: v,
+                  progress: Progress.Normal
+                }
+              })
+            })
+          })
+      )
+      this.subscriptions.push(
+        this.itemSubmitSubject
+          .do(item => {
+            this.setState(state => {
+              return {
+                value: state.value!.map((v, idx) => {
+                  if (idx === item.idx) {
+                    return {
+                      ...v,
+                      progress: Progress.Progressing
+                    }
+                  }
+                  return v
+                })
+              }
+            })
+          })
+          .flatMap(value => {
+            return Observable.fromPromise(this.props.itemSetter(value.item))
+              .map(item => {
+                return {
+                  idx: value.idx,
+                  item
+                }
+              })
+              .catch(() => {
+                this.setState(state => {
+                  return {
+                    value: state.value!.map((v, idx) => {
+                      if (idx === value.idx) {
+                        return {
+                          ...v,
+                          progress: Progress.Error
+                        }
+                      }
+                      return v
+                    })
+                  }
+                })
+                return Observable.of(null)
+              })
+          })
+          .filter(x => !!x)
+          .subscribe(value => {
+            this.setState(state => {
+              return {
+                value: state.value!.map(
+                  (v, idx) => (value!.idx === idx ? { item: value!.item, progress: Progress.Normal } : v)
+                )!
+              }
+            })
+          })
+      )
+    }
+  }
 }
