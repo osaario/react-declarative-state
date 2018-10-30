@@ -1,5 +1,5 @@
 import * as React from 'react'
-import _ from 'lodash'
+import * as _ from 'lodash'
 import { shallowCompareInjections } from './injections'
 
 export type PureScopeProps<E extends object, F extends object> = {
