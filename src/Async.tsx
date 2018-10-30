@@ -59,6 +59,11 @@ export namespace Async {
       }
     }
   }
+
+  export function isLoading(progress: Progress, type: Type) {
+    return progress === Progress.Progressing && type === Async.Type.Load
+  }
+
   const headers = {
     'Content-Type': 'application/json'
   }
@@ -123,7 +128,7 @@ export namespace Async {
   }
 
   export interface ConstProps<T> extends ConstSharedProps {
-    value: Promise<T>
+    getter: () => Promise<T>
     children: (data: T, progress: Progress) => JSX.Element
     placeholder?: (progress: Progress.Progressing | Progress.Error) => JSX.Element
   }
@@ -134,6 +139,7 @@ export namespace Async {
 
   export class Const<T> extends React.Component<ConstProps<T>, ConstState<T>> {
     subscriptions: Subscription[] = []
+    reloadSubject = new Subject()
     state: ConstState<T> = {
       value: create(null, Type.Load, Progress.Progressing)
     }
@@ -148,9 +154,15 @@ export namespace Async {
         s.unsubscribe()
       })
     }
+    componentDidUpdate(prevProps: ConstProps<T>) {
+      if (this.props.getter !== prevProps.getter) {
+        this.reloadSubject.next()
+      }
+    }
     componentDidMount() {
       this.subscriptions.push(
-        Observable.of(0)
+        this.reloadSubject
+          .startWith(0)
           .do(() => {
             this.setState({
               value: setProgress(this.state.value, Progress.Progressing)
@@ -158,7 +170,7 @@ export namespace Async {
           })
           .startWith(0)
           .switchMap(() => {
-            return Observable.fromPromise(this.props.value).catch(() => {
+            return Observable.fromPromise(this.props.getter()).catch(() => {
               this.setState({
                 value: setProgress(this.state.value, Progress.Error)
               })
@@ -175,38 +187,36 @@ export namespace Async {
     }
   }
   export interface VarProps<T> {
-    setter: (value: T | null) => { operation: Promise<T | null>; type: Type }
-    initialValue: Promise<T>
-    onChanged?: (value: T | null) => void
-    placeholder?: (progress: Progress.Progressing | Progress.Error, type: Type) => JSX.Element
-    children: (data: T, asyncState: State, setValue: (value: T | null) => void) => JSX.Element
+    setter: (value: T) => Promise<T>
+    getter: () => Promise<T>
+    onValueSet?: (value: T) => void
+    placeholder?: (progress: Progress, asyncType: Type) => JSX.Element
+    children: (data: T, progress: Progress, setValue: (value: T) => void, asyncType: Type) => JSX.Element
   }
 
   export interface VarState<T> {
     value: T | null
-    asyncState: State
+    progress: Progress
+    type: Type
   }
 
   export class Var<T> extends React.Component<VarProps<T>, VarState<T>> {
     subscriptions: Subscription[] = []
-    submitSubject = new Subject<T | null>()
+    submitSubject = new Subject<T>()
+    loadSubject = new Subject()
     state: VarState<T> = {
-      asyncState: {
-        progress: Progress.Normal,
-        type: Type.Load
-      },
+      progress: Progress.Normal,
+      type: Type.Load,
       value: null
     }
-    setValue = (data: T | null) => {
+    setValue = (data: T) => {
       this.submitSubject.next(data)
     }
     render() {
       if (this.state.value) {
-        return this.props.children(this.state.value, this.state.asyncState, this.setValue)
+        return this.props.children(this.state.value, this.state.progress, this.setValue, this.state.type)
       } else {
-        return this.props.placeholder
-          ? this.props.placeholder(this.state.asyncState.progress as any, this.state.asyncState.type)
-          : null
+        return this.props.placeholder ? this.props.placeholder(this.state.progress, this.state.type) : null
       }
     }
     componentWillUnmount() {
@@ -214,25 +224,27 @@ export namespace Async {
         s.unsubscribe()
       })
     }
+    componentDidUpdate(prevProps: VarProps<T>) {
+      if (this.props.getter !== prevProps.getter) {
+        this.loadSubject.next()
+      }
+    }
     componentDidMount() {
       this.subscriptions.push(
-        Observable.of(0)
+        this.loadSubject
+          .startWith(0)
           .do(() => {
             this.setState({
-              asyncState: {
-                progress: Progress.Progressing,
-                type: Type.Load
-              }
+              progress: Progress.Progressing,
+              type: Type.Load
             })
           })
           .startWith(0)
           .switchMap(() => {
-            return Observable.fromPromise(this.props.initialValue).catch(() => {
+            return Observable.fromPromise(this.props.getter()).catch(() => {
               this.setState({
-                asyncState: {
-                  progress: Progress.Error,
-                  type: Type.Load
-                }
+                progress: Progress.Error,
+                type: Type.Load
               })
               return Observable.of(null)
             })
@@ -240,31 +252,24 @@ export namespace Async {
           .filter(x => !!x)
           .subscribe(value => {
             this.setState({
-              asyncState: {
-                progress: Progress.Normal,
-                type: Type.Load
-              },
+              progress: Progress.Normal,
+              type: Type.Load,
               value
             })
           })
       )
       const submitObs = this.submitSubject
-        .map(value => this.props.setter(value))
-        .do(operation => {
+        .do(() => {
           this.setState({
-            asyncState: {
-              progress: Progress.Progressing,
-              type: operation.type
-            }
+            progress: Progress.Progressing,
+            type: Type.Update
           })
         })
-        .switchMap(operation => {
-          return Observable.fromPromise(operation.operation).catch(() => {
+        .switchMap(value => {
+          return Observable.fromPromise(this.props.setter(value)).catch(() => {
             this.setState({
-              asyncState: {
-                progress: Progress.Error,
-                type: operation.type
-              }
+              progress: Progress.Error,
+              type: Type.Update
             })
             return Observable.of(null)
           })
@@ -275,78 +280,15 @@ export namespace Async {
           this.setState(
             {
               value,
-              asyncState: {
-                progress: Progress.Normal,
-                type: Type.Load
-              }
+              progress: Progress.Normal,
+              type: Type.Update
             },
             () => {
-              if (this.props.onChanged) this.props.onChanged(value)
+              if (this.props.onValueSet) this.props.onValueSet(value!)
             }
           )
         })
       )
     }
   }
-
-  /*
-  export interface ObsLoaderProps<T> extends LoaderSharedProps {
-    trigger: Observable<Observable<T>>
-    children: (data: T) => JSX.Element
-  }
-
-  export interface ObsLoaderState<T> {
-    value: Async.Data<T | null>
-  }
-
-  export class ObsLoader<T> extends React.Component<ObsLoaderProps<T>, ObsLoaderState<T>> {
-    subscriptions: Subscription[] = []
-    state: ObsLoaderState<T> = {
-      value: Async.create(null, Async.Type.Load, Progress.Progressing)
-    }
-    render() {
-      if (!this.state.value.data) {
-        return renderNoData(this.state.value.state, {
-          ...this.props,
-          lang: this.context.lang
-        } as any)
-      }
-      return (
-        <ProgressContainer
-          progressing={this.state.value.state.progress === Progress.Progressing}
-        >
-          {this.props.children(this.state.value.data)}
-        </ProgressContainer>
-      )
-    }
-    componentWillUnmount() {
-      this.subscriptions.forEach(s => {
-        s.unsubscribe()
-      })
-    }
-    componentDidMount() {
-      this.subscriptions.push(
-        this.props.trigger
-          .do(() => {
-            this.setState({
-              value: Async.setProgress(this.state.value, Progress.Progressing)
-            })
-          })
-          .switchMap(operation => {
-            return operation.catch(() => {
-              this.setState({
-                value: Async.setProgress(this.state.value, Progress.Error)
-              })
-              return Observable.of(null)
-            })
-          })
-          .filter(x => !!x)
-          .subscribe(value => {
-            this.setState({
-              value: Async.set(this.state.value, value!, Progress.Done)
-            })
-          })
-      )
-    }
-  }*/
 }

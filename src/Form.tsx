@@ -1,7 +1,6 @@
 import * as React from 'react'
 import * as _ from 'lodash'
 import { formRules, ValidationRuleType, Validation } from './formrules'
-import { ProgressButtonProps, ProgressButton } from './ProgressButton'
 const L: any = require('partial.lenses')
 
 type ValidationRules = {
@@ -82,7 +81,6 @@ export interface FormProps<T>
   children: (
     Form: {
       Root: (props: FormScopeSharedPublicProps<T>) => JSX.Element
-      SubmitButton: (props: ProgressButtonProps) => JSX.Element
     }
   ) => JSX.Element
 }
@@ -313,18 +311,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     // no pricings yet registered so lets just cast this
     value: L.modify(L.leafs, wrapValue, this.props.value)
   }
-  SubmitButton = (props: ProgressButtonProps) => {
-    /*
-    const touchedFieldsWithRules = _.intersection(
-      _.keys(this.state.rules) as string[],
-      this.state.touchedFieldPaths as string[]
-    )
-    const disabled = !touchedFieldsWithRules.reduce((acc, val) => {
-      return acc && !this.getValidationForField(val as any)
-    }, true)
-    */
-    return <ProgressButton {..._.omit(props, 'ref')} disabled={false} type="submit" />
-  }
   touchField = (lensPath: LensPathType) => {
     /* TODO Check that the path exists or else throw Error */
     if (!L.isDefined(lensPath)) {
@@ -449,8 +435,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
         }}
       >
         {this.props.children({
-          Root: this.Root,
-          SubmitButton: this.SubmitButton
+          Root: this.Root
         })}
       </form>
     )
