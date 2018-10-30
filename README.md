@@ -1,6 +1,6 @@
 # Declarative Components
 
-Declarative Components for React.
+Declarative Components for React. Create asynchronous UI:s with ease.
 
 ## Installation
 
