@@ -3,6 +3,7 @@ import { shallowCompareInjections } from './injections'
 
 export type PureScopeProps<E extends object> = {
   injections: E
+  shadows?: object
   children: (injections: E) => JSX.Element
 }
 
@@ -14,15 +15,15 @@ export class PureScope<E extends object> extends React.Component<PureScopeProps<
     return true
   }
   render() {
+    if (this.props.shadows) {
+      const str = this.props.children.toString()
+      const foundShadows = Object.keys(this.props.shadows).reduce((acc, shadowKey) => {
+        return str.indexOf(' ' + shadowKey) !== -1 || acc
+      }, false)
+      if (foundShadows) {
+        throw Error('Shadowed variables found in function')
+      }
+    }
     return this.props.children(this.props.injections)
   }
-}
-
-export type PureVarProps<T, E extends object> = {
-  initialValue: T
-  injections: E
-  children: (value: T, setValue: (tab: T) => void, injections: E) => JSX.Element
-}
-export type PureVarState<T> = {
-  value: T
 }
