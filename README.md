@@ -135,12 +135,13 @@ And actually in the above case the `h1` header is still rendered twice versus th
 Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. This same optimization can be achieved with declarative components by guarding the child with the `PureScope` component. A prop `injections` is provided to the `PureScope`component. `PureScope` will perfom a shallow comparison on the injections prop (In the same way as props are compared in `PureComponent`) to decide whether it is necessary to render again or not. Injections are injected to the children function.
 
 ```JSX
-import { Sync, Async, Form, PureScope } from "declarative-components"
+import { Sync, Async, PureScope } from "declarative-components"
 
 const photoChild = ({ photo }) => (
   <Sync.Var initialValue={100}>
     {(width, setWidth) => (
       <img
+        alt=""
         onClick={() => {
           setWidth(width + 10)
         }}
@@ -311,22 +312,9 @@ const App = () => (
 Easily manage an array of forms with simple concise logic
 
 ```JSX
-interface Post {
-  userId: number
-  id: number
-  title: string
-  body: string
-}
+import { Sync, Async, Form, PureScope } from "declarative-components"
 
-const postChild = ({
-  post,
-  progress,
-  setPost
-}: {
-  post: Post
-  progress: Async.Progress
-  setPost: (value: Post) => void
-}) => (
+const postChild = ({ post, progress, setPost }) => (
   <Form value={post} onChange={setPost}>
     {({ Root }) => (
       <Fragment>
@@ -362,10 +350,10 @@ const postChild = ({
 const App = () => (
   <Async.Array
     childKey="id"
-    getter={() => Async.GET<Post[]>("https://jsonplaceholder.typicode.com/posts/").then(posts => posts.splice(0, 10))}
-    itemSetter={post => Async.PUT<Post>("https://jsonplaceholder.typicode.com/todos/" + post.id, post)}
+    getter={() => Async.GET("https://jsonplaceholder.typicode.com/posts/").then(posts => posts.splice(0, 10))}
+    itemSetter={post => Async.PUT("https://jsonplaceholder.typicode.com/todos/" + post.id, post)}
   >
-    {(post, progress, setPost) => <Sync.PureScope children={postChild} injections={{ post, progress, setPost }} />}
+    {(post, progress, setPost) => <PureScope children={postChild} injections={{ post, progress, setPost }} />}
   </Async.Array>
 )
 ```
