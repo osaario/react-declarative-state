@@ -65,6 +65,7 @@ type FormEventType<T> = T extends Array<infer G> ? { [K in keyof G]?: G[K] }[] :
 export interface FormScopePrivateProps<T> {
   rootValue: T
   value: any
+  iteration: number
   onChange: (e: any) => void
   onInsertRule: (lensPath: LensPathType, rule: ValidationRules, ref: React.RefObject<HTMLInputElement>) => void
   onRemoveRule: (lensPath: LensPathType) => void
@@ -171,6 +172,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
     return (
       <FormScope
         {...props}
+        iteration={this.props.iteration}
         onChange={this.props.onChange}
         rootValue={this.props.rootValue[this.props.scope]}
         value={this.props.value}
@@ -206,7 +208,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
         value={value}
         _textArea={(props as any)._textArea}
         {..._.omit(_.omit(props, 'ref'), _.keys(formRules))}
-        key={JSON.stringify(lensPath) + JSON.stringify(rules)}
+        key={this.props.iteration + JSON.stringify(lensPath) + JSON.stringify(rules)}
         onDidMount={ref => {
           console.log('insert rules', props.name, ref)
           this.props.onInsertRule(lensPath, rules, ref)
@@ -283,6 +285,7 @@ export class FormScope<T, S extends keyof T> extends React.Component<
 
 export interface FormState<T> {
   value: T
+  iteration: 0
 }
 
 const wrapValue = (value: number | string | boolean) => {
@@ -309,7 +312,8 @@ const wrappedValues = L.compose(
 export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   state: FormState<T> = {
     // no pricings yet registered so lets just cast this
-    value: L.modify(L.leafs, wrapValue, this.props.value)
+    value: L.modify(L.leafs, wrapValue, this.props.value),
+    iteration: 0
   }
   touchField = (lensPath: LensPathType) => {
     /* TODO Check that the path exists or else throw Error */
@@ -351,6 +355,7 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
     return (
       <FormScope
         {...props}
+        iteration={this.state.iteration}
         rootValue={this.state}
         value={this.state}
         onInsertRule={this.insertRule}
@@ -402,8 +407,11 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
   componentDidUpdate(prevProps: any) {
     if (prevProps.value !== this.props.value && JSON.stringify(prevProps.value) !== JSON.stringify(this.props.value)) {
       // Do a JSON parse to check this
-      this.setState({
-        value: L.modify(L.leafs, wrapValue, this.props.value)
+      this.setState((state: any) => {
+        return {
+          value: L.modify(L.leafs, wrapValue, this.props.value),
+          iteration: state.iteration + 1
+        }
       })
     }
   }
