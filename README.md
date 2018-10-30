@@ -183,7 +183,29 @@ const App = () => (
 )
 ```
 
-It is a good idea to declare the function for the optimized context outside the class scope to avoid capturing variables from upper scopes. Otherwise it is easy to run into bugs since the children function is not re-called unless injections or value are changed .
+It is a good idea to declare the function for the optimized context outside the class scope to avoid capturing variables from upper scopes. Otherwise it is easy to run into bugs since the children function is not re-called unless injections or value are changed. If we want to preserve the readable DOM tree without having to split to two functions but still want to accomplish some safety, shadowing can also be used.
+
+```JSX
+<PureScope injections={{ photo }} key={photo.id}>
+  {({ photo, numberOfPhotos = null, setNumberOfPhotos = null, photos = null }) => (
+    <Sync.Var initialValue={100}>
+      {(width, setWidth) => (
+        <img
+          alt=""
+          onClick={() => {
+            setWidth(width + 10)
+          }}
+          width={width}
+          src={photo.url}
+        />
+      )}
+    </Sync.Var>
+  )}
+</PureScope>
+```
+
+Of course then we are left with the job of figuring out all the things that need to be shadowed.
+
 
 ### Drop-In Asynchronous
 
