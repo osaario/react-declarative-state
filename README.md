@@ -132,19 +132,23 @@ And actually in the above case the `h1` header is still rendered twice versus th
 
 ### Optimizable
 
-Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. This same optimization can be achieved with declarative components by using the `Sync.PureVar` component. An additional prop `injections` is provided. `Sync.PureVar` will perfom a shallow comparison on the injections prop (In the same way as props are compared in `PureComponent`) to decide whether it is necessary to render again or not. Injections are injected to the children function.
+Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. This same optimization can be achieved with declarative components by guarding the child with the `PureScope` component. A prop `injections` is provided to the `PureScope`component. `PureScope` will perfom a shallow comparison on the injections prop (In the same way as props are compared in `PureComponent`) to decide whether it is necessary to render again or not. Injections are injected to the children function.
 
 ```JSX
-import { Sync, Async, Form } from "declarative-components"
+import { Sync, Async, Form, PureScope } from "declarative-components"
 
-const photoChild = (width, setWidth, { photo }) => (
-  <img
-    onClick={() => {
-      setWidth(width + 10)
-    }}
-    width={width}
-    src={photo.url}
-  />
+const photoChild = ({ photo }) => (
+  <Sync.Var initialValue={100}>
+    {(width, setWidth) => (
+      <img
+        onClick={() => {
+          setWidth(width + 10)
+        }}
+        width={width}
+        src={photo.url}
+      />
+    )}
+  </Sync.Var>
 )
 
 const App = () => (
@@ -166,7 +170,7 @@ const App = () => (
                   </button>
                 </div>
                 {photos.slice(0, numberOfPhotos).map(photo => (
-                  <Sync.PureVar children={photoChild} injections={{ photo }} key={photo.id} initialValue={100} />
+                  <PureScope children={photoChild} injections={{ photo }} key={photo.id} />
                 ))}
               </Fragment>
             )}
