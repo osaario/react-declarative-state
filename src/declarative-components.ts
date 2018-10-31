@@ -1,7 +1,7 @@
 export * from './Async'
-export * from './DataTable'
+export * from './DataOperator'
+export * from './VirtualizationContainer'
 export * from './Sync'
-export * from './PureScope'
 export * from './Form'
 export * from './formRules'
 
