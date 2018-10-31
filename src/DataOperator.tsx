@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
 import * as React from 'react'
 
-export interface DatatableProps<T> {
+export interface DataOperatorProps<T> {
   data: T[]
   children: (
     sortedData: T[],
@@ -13,7 +13,7 @@ export interface DatatableProps<T> {
   ) => JSX.Element
   initialSortField: keyof T
 }
-export interface DatatableState<T> {
+export interface DataOperatorState<T> {
   sortField: keyof T
   sortDirection: 'desc' | 'asc'
   searchString: string
@@ -25,8 +25,8 @@ export interface SortProps<T> {
   field: keyof T
 }
 
-export class DataTable<T> extends React.PureComponent<DatatableProps<T>, DatatableState<T>> {
-  state: DatatableState<T> = {
+export class DataOperator<T> extends React.PureComponent<DataOperatorProps<T>, DataOperatorState<T>> {
+  state: DataOperatorState<T> = {
     searchString: '',
     sortDirection: 'desc',
     sortField: this.props.initialSortField,
