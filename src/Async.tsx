@@ -295,6 +295,9 @@ export namespace Async {
     itemSetter?: (value: T) => Promise<T>
     getter: () => Promise<T[]>
     childKey?: keyof T
+    virtualization?: {
+      rowHeight: number
+    }
     placeholder?: (progress: Progress) => JSX.Element
     children: (data: T, progress: Progress, setItem: (value: T) => void) => JSX.Element
   }
@@ -302,31 +305,69 @@ export namespace Async {
   export interface ArrayState<T> {
     value: { item: T; progress: Progress; setItem: (value: T) => void }[] | null
     allProgress: Progress
+    lastIndexOnScreen: number
+    firstIndexOnScreen: number
   }
 
   export class Array<T> extends React.Component<ArrayProps<T>, ArrayState<T>> {
     subscriptions: Subscription[] = []
     itemSubmitSubject = new Subject<{ item: T; idx: number }>()
     loadSubject = new Subject()
+    virtualizedRef = React.createRef<HTMLDivElement>()
     state: ArrayState<T> = {
       allProgress: Progress.Normal,
-      value: null
+      value: null,
+      firstIndexOnScreen: 0,
+      lastIndexOnScreen: this.props.virtualization
+        ? Math.ceil(window.innerHeight / this.props.virtualization.rowHeight)
+        : 0
     }
     setItem = (value: T, idx: number) => {
       this.itemSubmitSubject.next({ item: value, idx })
     }
     render() {
       if (this.state.value) {
-        return this.state.value.map((value, idx) => (
-          <React.Fragment key={this.props.childKey ? value.item[this.props.childKey].toString() : idx.toString()}>
-            {this.props.children(value.item, value.progress, value.setItem)}
-          </React.Fragment>
-        ))
+        if (!this.props.virtualization) {
+          return this.state.value.map((value, idx) => (
+            <React.Fragment key={this.props.childKey ? value.item[this.props.childKey].toString() : idx.toString()}>
+              {this.props.children(value.item, value.progress, value.setItem)}
+            </React.Fragment>
+          ))
+        } else {
+          return (
+            <div ref={this.virtualizedRef}>
+              <div
+                style={{
+                  height: this.state.firstIndexOnScreen * this.props.virtualization.rowHeight
+                }}
+              />
+              {[...this.state.value]
+                .splice(this.state.firstIndexOnScreen, this.state.lastIndexOnScreen)
+                .map((value, idx) => (
+                  <div
+                    key={
+                      this.props.childKey
+                        ? value.item[this.props.childKey].toString()
+                        : this.state.firstIndexOnScreen + idx.toString()
+                    }
+                  >
+                    {this.props.children(value.item, value.progress, value.setItem)}
+                  </div>
+                ))}
+              <div
+                style={{
+                  height: (this.state.value.length - this.state.lastIndexOnScreen) * this.props.virtualization.rowHeight
+                }}
+              />
+            </div>
+          )
+        }
       } else {
         return this.props.placeholder ? this.props.placeholder(this.state.allProgress) : null
       }
     }
     componentWillUnmount() {
+      window.removeEventListener('scroll', this.handleScroll)
       this.subscriptions.forEach(s => {
         s.unsubscribe()
       })
@@ -343,7 +384,23 @@ export namespace Async {
         return idx1 === idx2
       }
     }
+    handleScroll = () => {
+      const table = this.virtualizedRef.current
+      if (table) {
+        const rect = table.getBoundingClientRect()
+        const firstIndexOnScreen = Math.floor(-rect.top / this.props.virtualization!.rowHeight)
+        const lastIndexOnScreen =
+          Math.ceil(window.innerHeight / this.props.virtualization!.rowHeight) + firstIndexOnScreen
+        this.setState({
+          lastIndexOnScreen,
+          firstIndexOnScreen
+        })
+      }
+    }
     componentDidMount() {
+      if (this.props.virtualization) {
+        window.addEventListener('scroll', this.handleScroll)
+      }
       this.subscriptions.push(
         this.loadSubject
           .startWith(0)
