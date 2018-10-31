@@ -335,13 +335,13 @@ export namespace Async {
             Math.ceil(this.props.virtualization.containerHeight / this.props.virtualization.rowHeight) +
             firstIndexOnScreen
           return (
-            <React.Fragment>
-              <div
-                key="top"
-                style={{
-                  height: firstIndexOnScreen * this.props.virtualization.rowHeight
-                }}
-              />
+            <div
+              style={{
+                position: 'absolute',
+                top: firstIndexOnScreen * this.props.virtualization.rowHeight,
+                paddingBottom: (this.state.value.length - lastIndexOnScreen) * this.props.virtualization.rowHeight
+              }}
+            >
               {[...this.state.value].splice(firstIndexOnScreen, lastIndexOnScreen).map((value, idx) => (
                 <div
                   key={
@@ -353,13 +353,7 @@ export namespace Async {
                   {this.props.children(value.item, value.progress, value.setItem)}
                 </div>
               ))}
-              <div
-                key="bottom"
-                style={{
-                  height: (this.state.value.length - lastIndexOnScreen) * this.props.virtualization.rowHeight
-                }}
-              />
-            </React.Fragment>
+            </div>
           )
         }
       } else {
