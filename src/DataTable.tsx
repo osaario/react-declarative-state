@@ -1,25 +1,11 @@
 import * as _ from 'lodash'
 import * as React from 'react'
-import * as ReactDOM from 'react-dom'
-import { Subject, Subscription } from 'rxjs'
-
-const defaultRowsBefore = 15
-const defaultPadding = 15
 
 export interface DatatableProps<T> {
   data: T[]
-  rowHeight?: number
-  anticipateRows?: number
   children: (
+    sortedData: T[],
     DataTable: {
-      THead: (
-        props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLTableSectionElement>, HTMLTableSectionElement>
-      ) => JSX.Element
-      TBody: (
-        props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLTableSectionElement>, HTMLTableSectionElement> & {
-          children: (data: T) => JSX.Element
-        }
-      ) => JSX.Element
       Sort: (props: SortProps<T>) => JSX.Element
     },
     queryString: string,
@@ -39,125 +25,7 @@ export interface SortProps<T> {
   field: keyof T
 }
 
-interface DataTableBodyState {
-  firstIndexOnScreen: number
-  height: number
-  lastIndexOnScreen: number
-}
-
-class DataTableBody<T> extends React.PureComponent<
-  {
-    data: T[]
-    rowHeight: number
-    anticipateRows?: number
-    children: (data: T) => JSX.Element
-  },
-  DataTableBodyState
-> {
-  state: DataTableBodyState = {
-    firstIndexOnScreen: 0,
-    height: 500,
-    lastIndexOnScreen: 100
-  }
-  private ref = React.createRef<HTMLTableSectionElement>()
-  public scrollToTop = () => {
-    const domNode = ReactDOM.findDOMNode(this.ref.current as any) as any
-    domNode.scrollTop = 0
-  }
-  onScroll = (e: any) => {
-    const target: any = e.currentTarget
-    const tableTop = target.scrollTop
-    const firstIndexOnScreen = Math.floor(tableTop / this.props.rowHeight!)
-    const lastIndexOnScreen = Math.ceil((tableTop + target.offsetHeight) / this.props.rowHeight!)
-    this.setState({
-      firstIndexOnScreen,
-      lastIndexOnScreen
-    })
-  }
-  render() {
-    const rowsBeforeAndAfter = this.props.anticipateRows || defaultRowsBefore
-    const beforeVisible = Math.max(this.state.firstIndexOnScreen - rowsBeforeAndAfter, 0)
-    const afterVisible = Math.max(this.props.data.length - (this.state.lastIndexOnScreen + rowsBeforeAndAfter + 1), 0)
-    const startIndex = Math.max(0, this.state.firstIndexOnScreen - rowsBeforeAndAfter)
-    const visible = this.props.data.slice(
-      startIndex,
-      Math.min(this.state.lastIndexOnScreen + defaultRowsBefore + 1, this.props.data.length)
-    )
-    return (
-      <tbody
-        style={{
-          display: 'block',
-          height: this.state.height,
-          overflowY: 'scroll'
-        }}
-        onScroll={this.onScroll}
-        ref={this.ref}
-      >
-        <React.Fragment>
-          <div
-            key="b"
-            style={{
-              height: beforeVisible * this.props.rowHeight
-            }}
-          />
-          {visible.map((data, idx) => (
-            <tr
-              style={{
-                display: 'table',
-                tableLayout: 'fixed',
-                width: '100%'
-              }}
-              key={startIndex + idx}
-            >
-              {this.props.children(data)}
-            </tr>
-          ))}
-          <div
-            key="a"
-            style={{
-              height: afterVisible * this.props.rowHeight
-            }}
-          />
-        </React.Fragment>
-      </tbody>
-    )
-  }
-  componentDidMount() {
-    const domNode = ReactDOM.findDOMNode(this.ref.current as any) as any
-    const rect = domNode.getBoundingClientRect()
-    this.setState({
-      height: window.innerHeight - rect.top - defaultPadding
-    })
-    window.onresize = () => {
-      // Do something.
-      const domNode2 = ReactDOM.findDOMNode(this.ref.current as any) as any
-      const rect2 = domNode2.getBoundingClientRect()
-      this.setState({
-        height: window.innerHeight - rect2.top - defaultPadding
-      })
-    }
-  }
-}
-
 export class DataTable<T> extends React.PureComponent<DatatableProps<T>, DatatableState<T>> {
-  static Td = (
-    props: React.DetailedHTMLProps<React.TdHTMLAttributes<HTMLTableDataCellElement>, HTMLTableDataCellElement>
-  ) => {
-    return (
-      <td
-        {...props}
-        style={{
-          ...props.style,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
-        }}
-      />
-    )
-  }
-  bodyRef = React.createRef<DataTableBody<T>>()
-  generatePdfSubject = new Subject()
-  subscriptions: Subscription[] = []
   state: DatatableState<T> = {
     searchString: '',
     sortDirection: 'desc',
@@ -165,34 +33,6 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
     sortedData: this.props.data
   }
 
-  THead = (props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLTableSectionElement>, HTMLTableSectionElement>) => {
-    return (
-      <thead
-        {...props}
-        style={{
-          ...props.style,
-          display: 'table',
-          tableLayout: 'fixed',
-          width: '100%'
-        }}
-      />
-    )
-  }
-  TBody = (
-    props: React.DetailedHTMLProps<React.HTMLAttributes<HTMLTableSectionElement>, HTMLTableSectionElement> & {
-      children: (data: T) => JSX.Element
-    }
-  ) => {
-    return (
-      <DataTableBody
-        ref={this.bodyRef}
-        data={this.state.sortedData}
-        anticipateRows={this.props.anticipateRows}
-        rowHeight={this.props.rowHeight!}
-        children={props.children}
-      />
-    )
-  }
   Sort = (props: SortProps<T>) => {
     return props.children(this.state.sortField === props.field ? this.state.sortDirection : 'none', () => {
       this.onSortFieldClick(props.field)
@@ -250,14 +90,9 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
       sortedData = _.sortBy(sortedData, this.state.sortField)
     }
     sortedData = this.state.sortDirection === 'asc' ? sortedData : _.reverse(sortedData)
-    this.setState(
-      {
-        sortedData
-      },
-      () => {
-        this.bodyRef.current!.scrollToTop()
-      }
-    )
+    this.setState({
+      sortedData
+    })
   }
   componentDidUpdate(prevProps: any) {
     if (this.props.data !== prevProps.data) {
@@ -266,10 +101,9 @@ export class DataTable<T> extends React.PureComponent<DatatableProps<T>, Datatab
   }
   render() {
     return this.props.children(
+      this.state.sortedData,
       {
-        Sort: this.Sort,
-        TBody: this.TBody,
-        THead: this.THead
+        Sort: this.Sort
       },
       this.state.searchString,
       this.onSearchStringChange
