@@ -160,6 +160,7 @@ const App = () => (
     <Async.Const getter={() => Async.GET("https://jsonplaceholder.typicode.com/photos")}>
       {photos => (
         <div>
+          <h2>I have {photos.length} photos in total</h2>
           <Sync.Var initialValue={10}>
             {(numberOfPhotos, setNumberOfPhotos) => (
               <Fragment>
@@ -308,53 +309,53 @@ const App = () => (
 )
 ```
 
-### Flexible
-
-Easily manage an array of forms with simple concise logic
+### Powerful
 
 ```JSX
-import { Sync, Async, Form, PureScope } from "declarative-components"
-
-const postChild = ({ post, progress, setPost }) => (
-  <Form value={post} onChange={setPost}>
-    {({ Root }) => (
-      <Fragment>
-        <Root>
-          {({ Input, TextArea, Validation }) => (
-            <Fragment>
-              <Validation for="title">
-                {validation => (
-                  <span style={{ color: validation ? "red" : undefined }}>
-                    <label>Todo title</label>
-                    <Input notEmpty={true} maxLength={100} name="title" />
-                  </span>
-                )}
-              </Validation>
-              <Validation for="body">
-                {validation => (
-                  <span style={{ color: validation ? "red" : undefined }}>
-                    <label>Todo title</label>
-                    <TextArea minLength={10} notEmpty={true} maxLength={10000} name="body" />
-                  </span>
-                )}
-              </Validation>
-            </Fragment>
-          )}
-        </Root>
-        <button type="submit" disabled={progress === Async.Progress.Progressing}>
-          Save Todo
-        </button>
-      </Fragment>
-    )}
-  </Form>
-)
+class Post extends React.PureComponent {
+  render() {
+    return (
+      <Form value={this.props.post} onChange={this.props.setPost}>
+        {({ Root }) => (
+          <Fragment>
+            <Root>
+              {({ Input, TextArea, Validation }) => (
+                <Fragment>
+                  <Validation for="title">
+                    {validation => (
+                      <span style={{ color: validation ? "red" : undefined }}>
+                        <label>Todo title</label>
+                        <Input notEmpty={true} maxLength={100} name="title" />
+                      </span>
+                    )}
+                  </Validation>
+                  <Validation for="body">
+                    {validation => (
+                      <span style={{ color: validation ? "red" : undefined }}>
+                        <label>Todo title</label>
+                        <TextArea minLength={10} notEmpty={true} maxLength={10000} name="body" />
+                      </span>
+                    )}
+                  </Validation>
+                </Fragment>
+              )}
+            </Root>
+            <button type="submit" disabled={this.props.progress === Async.Progress.Progressing}>
+              Save Todo
+            </button>
+          </Fragment>
+        )}
+      </Form>
+    )
+  }
+}
 const App = () => (
   <Async.Array
     childKey="id"
     getter={() => Async.GET("https://jsonplaceholder.typicode.com/posts/").then(posts => posts.splice(0, 10))}
     itemSetter={post => Async.PUT("https://jsonplaceholder.typicode.com/todos/" + post.id, post)}
   >
-    {(post, progress, setPost) => <PureScope children={postChild} injections={{ post, progress, setPost }} />}
+    {(post, progress, setPost) => <Post {...{ post, progress, setPost }} />}
   </Async.Array>
 )
 ```
