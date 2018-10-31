@@ -323,7 +323,6 @@ class App extends React.Component {
                         virtualization={{
                           rowHeight: 34,
                           containerHeight,
-                          renderAround: 10,
                           wrapperComponentClass: "tbody",
                           scrollTop
                         }}
