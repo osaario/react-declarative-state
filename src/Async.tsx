@@ -342,17 +342,9 @@ export namespace Async {
                 paddingBottom: (this.state.value.length - lastIndexOnScreen) * this.props.virtualization.rowHeight
               }}
             >
-              {this.state.value.slice(firstIndexOnScreen, lastIndexOnScreen).map((value, idx) => (
-                <div
-                  key={
-                    this.props.childKey
-                      ? value.item[this.props.childKey].toString()
-                      : firstIndexOnScreen + idx.toString()
-                  }
-                >
-                  {this.props.children(value.item, value.progress, value.setItem)}
-                </div>
-              ))}
+              {this.state.value
+                .slice(firstIndexOnScreen, lastIndexOnScreen)
+                .map(value => this.props.children(value.item, value.progress, value.setItem))}
             </div>
           )
         }
