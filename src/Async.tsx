@@ -331,7 +331,7 @@ export namespace Async {
           ))
         } else {
           const top = this.props.virtualization.scrollTop
-          const renderAround = this.props.virtualization.renderAround ? this.props.virtualization.renderAround : 0
+          const renderAround = this.props.virtualization.renderAround ? this.props.virtualization.renderAround : 5
           const firstIndexOnScreen = Math.max(Math.floor(top / this.props.virtualization!.rowHeight) - renderAround, 0)
           const lastIndexOnScreen = Math.min(
             Math.ceil(this.props.virtualization.containerHeight / this.props.virtualization.rowHeight) +
@@ -342,8 +342,7 @@ export namespace Async {
           return (
             <div
               style={{
-                position: 'absolute',
-                top: firstIndexOnScreen * this.props.virtualization.rowHeight,
+                paddingTop: firstIndexOnScreen * this.props.virtualization.rowHeight,
                 paddingBottom: (this.state.value.length - lastIndexOnScreen) * this.props.virtualization.rowHeight
               }}
             >
