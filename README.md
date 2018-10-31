@@ -132,25 +132,27 @@ And actually in the above case the `h1` header is still rendered twice versus th
 
 ### Optimizable
 
-Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. This same optimization can be achieved with declarative components by guarding the child with the `PureScope` component. A prop `injections` is provided to the `PureScope`component. `PureScope` will perfom a shallow comparison on the injections prop (In the same way as props are compared in `PureComponent`) to decide whether it is necessary to render again or not. Injections are injected to the children function.
+Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. Same can be achieved with the *declarative* way without the need to create a *stateful* component.
 
 ```JSX
-import { Sync, Async, PureScope } from "declarative-components"
-
-const photoChild = ({ photo }) => (
-  <Sync.Var initialValue={100}>
-    {(width, setWidth) => (
-      <img
-        alt=""
-        onClick={() => {
-          setWidth(width + 10)
-        }}
-        width={width}
-        src={photo.url}
-      />
-    )}
-  </Sync.Var>
-)
+class Photo extends React.PureComponent {
+  render() {
+    return (
+      <Sync.Var initialValue={100}>
+        {(width, setWidth) => (
+          <img
+            alt=""
+            onClick={() => {
+              setWidth(width + 10)
+            }}
+            width={width}
+            src={this.props.photo.url}
+          />
+        )}
+      </Sync.Var>
+    )
+  }
+}
 
 const App = () => (
   <div>
@@ -171,7 +173,7 @@ const App = () => (
                   </button>
                 </div>
                 {photos.slice(0, numberOfPhotos).map(photo => (
-                  <PureScope children={photoChild} injections={{ photo }} key={photo.id} />
+                  <Photo photo={photo} />
                 ))}
               </Fragment>
             )}
@@ -182,29 +184,6 @@ const App = () => (
   </div>
 )
 ```
-
-It is a good idea to declare the function for the optimized context outside the class scope to avoid capturing variables from upper scopes. Otherwise it is easy to run into bugs since the children function is not re-called unless injections or value are changed. If we want to preserve the readable DOM tree without having to split to two functions but still want to accomplish some safety, shadowing can also be used.
-
-```JSX
-<PureScope injections={{ photo }} key={photo.id}>
-  {({ photo, numberOfPhotos = null, setNumberOfPhotos = null, photos = null }) => (
-    <Sync.Var initialValue={100}>
-      {(width, setWidth) => (
-        <img
-          alt=""
-          onClick={() => {
-            setWidth(width + 10)
-          }}
-          width={width}
-          src={photo.url}
-        />
-      )}
-    </Sync.Var>
-  )}
-</PureScope>
-```
-
-Of course then we are left with the job of figuring out all the things that need to be shadowed.
 
 
 ### Drop-In Asynchronous
