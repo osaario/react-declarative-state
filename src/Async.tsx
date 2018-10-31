@@ -299,6 +299,7 @@ export namespace Async {
       rowHeight: number
       containerHeight: number
       scrollTop: number
+      renderAround?: number
     }
     placeholder?: (progress: Progress) => JSX.Element
     children: (data: T, progress: Progress, setItem: (value: T) => void) => JSX.Element
@@ -330,10 +331,14 @@ export namespace Async {
           ))
         } else {
           const top = this.props.virtualization.scrollTop
-          const firstIndexOnScreen = Math.floor(top / this.props.virtualization!.rowHeight)
-          const lastIndexOnScreen =
+          const renderAround = this.props.virtualization.renderAround ? this.props.virtualization.renderAround : 0
+          const firstIndexOnScreen = Math.max(Math.floor(top / this.props.virtualization!.rowHeight) - renderAround, 0)
+          const lastIndexOnScreen = Math.min(
             Math.ceil(this.props.virtualization.containerHeight / this.props.virtualization.rowHeight) +
-            firstIndexOnScreen
+              firstIndexOnScreen +
+              renderAround * 2,
+            this.state.value.length
+          )
           return (
             <div
               style={{
