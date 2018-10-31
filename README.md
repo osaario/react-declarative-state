@@ -254,110 +254,95 @@ const App = () => (
 )
 ```
 
-### Non-opinionated on visual representation
+### Composable and powerful
 
-Although the components carry powerful abstractions they do not take any opinion on what the components look like. In this example the _virtualized_ `DataTable` can be made to look exactly like you want.
-
-```JSX
-import { DataTable, Sync, Async } from "declarative-components"
-
-const tdStyle = { whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }
-const App = () => (
-  <Async.Const getter={() => Async.GET("https://jsonplaceholder.typicode.com/photos")}>
-    {photos => (
-      <DataTable data={photos} rowHeight={24} initialSortField={"title"}>
-        {({ THead, TBody, Sort }, queryString, setQueryString) => {
-          return (
-            <table>
-              <input
-                placeholder="search"
-                value={queryString}
-                onChange={(e: any) => {
-                  setQueryString(e.target.value)
-                }}
-              />
-              <THead>
-                <tr>
-                  <Sort field="title">
-                    {(sortDirection, toggleSort) => (
-                      <th style={{ textAlign: "left", cursor: "pointer", whiteSpace: "nowrap" }} onClick={toggleSort}>
-                        Title {sortDirection === "desc" ? "⬇" : sortDirection === "asc" ? "⬆" : "⬍"}
-                      </th>
-                    )}
-                  </Sort>
-                  <th style={{ textAlign: "left" }}>id</th>
-                  <th style={{ textAlign: "left" }}>AlbumId</th>
-                  <th>Url</th>
-                </tr>
-              </THead>
-              <TBody>
-                {photo => (
-                  <Fragment>
-                    <td style={tdStyle}>{photo.title}</td>
-                    <td>{photo.id}</td>
-                    <td>{photo.albumId}</td>
-                    <td>{photo.url}</td>
-                  </Fragment>
-                )}
-              </TBody>
-            </table>
-          )
-        }}
-      </DataTable>
-    )}
-  </Async.Const>
-)
-```
-
-### Powerful
+Compose a *virtualized* datatable easily by combining different declarative operators. `declarative-components` take no opinions on styling so you can make your table to look exactly like you want.
 
 ```JSX
-class Post extends React.PureComponent {
+import { Async, VirtualizationContainer, DataOperator } from "declarative-components"
+
+const tdStyle = { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", padding: 8 }
+const thStyle = { textAlign: "left", cursor: "pointer", whiteSpace: "nowrap" }
+const sortIndicator = sortDirection => (sortDirection === "desc" ? "⬇" : sortDirection === "asc" ? "⬆" : "⬍")
+class CommentRow extends React.PureComponent {
   render() {
+    const comment = this.props.comment
     return (
-      <Form value={this.props.post} onChange={this.props.setPost}>
-        {({ Root }) => (
-          <Fragment>
-            <Root>
-              {({ Input, TextArea, Validation }) => (
-                <Fragment>
-                  <Validation for="title">
-                    {validation => (
-                      <span style={{ color: validation ? "red" : undefined }}>
-                        <label>Todo title</label>
-                        <Input notEmpty={true} maxLength={100} name="title" />
-                      </span>
-                    )}
-                  </Validation>
-                  <Validation for="body">
-                    {validation => (
-                      <span style={{ color: validation ? "red" : undefined }}>
-                        <label>Todo title</label>
-                        <TextArea minLength={10} notEmpty={true} maxLength={10000} name="body" />
-                      </span>
-                    )}
-                  </Validation>
-                </Fragment>
-              )}
-            </Root>
-            <button type="submit" disabled={this.props.progress === Async.Progress.Progressing}>
-              Save Todo
-            </button>
-          </Fragment>
-        )}
-      </Form>
+      <tr>
+        <td style={tdStyle}>{comment.name}</td>
+        <td>{comment.email}</td>
+        <td style={tdStyle}>{comment.body}</td>
+        <td>{comment.postId}</td>
+      </tr>
     )
   }
 }
-const App = () => (
-  <Async.Array
-    childKey="id"
-    getter={() => Async.GET("https://jsonplaceholder.typicode.com/posts/").then(posts => posts.splice(0, 10))}
-    itemSetter={post => Async.PUT("https://jsonplaceholder.typicode.com/todos/" + post.id, post)}
-  >
-    {(post, progress, setPost) => <Post {...{ post, progress, setPost }} />}
-  </Async.Array>
-)
+
+const getter = () => Async.GET("https://jsonplaceholder.typicode.com/comments")
+class App extends React.Component {
+  render() {
+    return (
+      <Async.Const getter={getter}>
+        {data => (
+          <DataOperator initialSortField={"name"} data={data}>
+            {(sortedData, { Sort }, searchString, onSearch) => (
+              <VirtualizationContainer>
+                {(scrollTop, containerHeight) => (
+                  <div>
+                    <h1>Comments</h1>
+                    <h2>These are comments</h2>
+                    <input
+                      value={searchString}
+                      placeholder={"Search comments"}
+                      onChange={(e: any) => {
+                        onSearch(e.target.value)
+                      }}
+                    />
+                    <table style={{ tableLayout: "fixed", width: "100%", overflow: "hidden" }}>
+                      <thead>
+                        <tr>
+                          <Sort field="name">
+                            {(sortDirection, toggleSort) => (
+                              <th style={thStyle} onClick={toggleSort}>
+                                Name {sortIndicator(sortDirection)}
+                              </th>
+                            )}
+                          </Sort>
+                          <Sort field="email">
+                            {(sortDirection, toggleSort) => (
+                              <th style={thStyle} onClick={toggleSort}>
+                                Email {sortIndicator(sortDirection)}
+                              </th>
+                            )}
+                          </Sort>
+                          <td>Body</td>
+                          <td>Post id</td>
+                        </tr>
+                      </thead>
+                      <Async.Array
+                        virtualization={{
+                          rowHeight: 34,
+                          containerHeight,
+                          renderAround: 10,
+                          wrapperComponentClass: "tbody",
+                          scrollTop
+                        }}
+                        childKey="id"
+                        getter={() => Promise.resolve(sortedData)}
+                      >
+                        {comment => <CommentRow key={comment.id} comment={comment} />}
+                      </Async.Array>
+                    </table>
+                  </div>
+                )}
+              </VirtualizationContainer>
+            )}
+          </DataOperator>
+        )}
+      </Async.Const>
+    )
+  }
+}
 ```
 
 ## Acknowledgements
