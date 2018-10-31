@@ -278,7 +278,21 @@ class CommentRow extends React.PureComponent {
   }
 }
 
-const getter = () => Async.GET("https://jsonplaceholder.typicode.com/comments")
+// Get a bunch of elements
+const getter = () =>
+  Async.GET("https://jsonplaceholder.typicode.com/comments").then(arr => {
+    let fullArr = arr
+    for (let i = 0; i < 100; i++) {
+      fullArr = fullArr.concat(arr)
+    }
+    return fullArr.map((elem, idx) => {
+      return {
+        ...elem,
+        id: idx + 1
+      }
+    })
+  })
+  
 class App extends React.Component {
   render() {
     return (
