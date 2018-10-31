@@ -4,16 +4,20 @@ export interface VirtualizationContainerProps {
   children: (scrollTop: number, containerHeight: number) => JSX.Element
 }
 
-export class VirtualizationContainer extends React.Component<VirtualizationContainerProps, { scrollTop: number }> {
+export class VirtualizationContainer extends React.Component<
+  VirtualizationContainerProps,
+  { scrollTop: number | null; containerHeight: number | null }
+> {
+  virtualizationRef = React.createRef<HTMLDivElement>()
   state = {
-    scrollTop: 0,
-    height: window.innerHeight
+    scrollTop: null,
+    containerHeight: null
   }
-  virtualizedRef = React.createRef<HTMLDivElement>()
 
   render() {
     return (
       <div
+        ref={this.virtualizationRef}
         style={{
           width: '100%',
           height: '100%',
@@ -29,8 +33,27 @@ export class VirtualizationContainer extends React.Component<VirtualizationConta
           this.setState({ scrollTop: elem.scrollTop })
         }}
       >
-        {this.props.children(this.state.scrollTop, this.state.height)}
+        {this.state.scrollTop != null &&
+          this.state.containerHeight != null &&
+          this.props.children(this.state.scrollTop!, this.state.containerHeight!)}
       </div>
     )
+  }
+  onResize = () => {
+    const rect = this.virtualizationRef.current!.getBoundingClientRect()
+    this.setState({
+      containerHeight: rect.bottom - rect.top
+    })
+  }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.onResize)
+  }
+  componentDidMount() {
+    const rect = this.virtualizationRef.current!.getBoundingClientRect()
+    this.setState({
+      containerHeight: rect.bottom - rect.top,
+      scrollTop: 0
+    })
+    window.addEventListener('resize', this.onResize)
   }
 }
