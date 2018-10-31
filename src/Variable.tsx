@@ -3,7 +3,7 @@ import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
 
 export interface VariableProps<T> {
-  setter: (value: T) => Promise<T>
+  setter?: (value: T) => Promise<T>
   getter: () => Promise<T>
   onValueSet?: (value: T) => void
   placeholder?: (progress: Async.Progress, asyncType: Async.Type) => JSX.Element
@@ -82,13 +82,15 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
         })
       })
       .switchMap(value => {
-        return Observable.fromPromise(this.props.setter(value)).catch(() => {
-          this.setState({
-            progress: Async.Progress.Error,
-            type: Async.Type.Update
-          })
-          return Observable.of(null)
-        })
+        return Observable.fromPromise(this.props.setter ? this.props.setter(value) : Promise.resolve(value)).catch(
+          () => {
+            this.setState({
+              progress: Async.Progress.Error,
+              type: Async.Type.Update
+            })
+            return Observable.of(null)
+          }
+        )
       })
       .filter(x => !!x)
     this.subscriptions.push(
