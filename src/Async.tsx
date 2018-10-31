@@ -299,7 +299,7 @@ export namespace Async {
       rowHeight: number
       containerHeight: number
       scrollTop: number
-      wrapperComponentClass?: string
+      wrapperComponentClass?: 'div' | 'section' | 'tbody'
       renderAround?: number
     }
     placeholder?: (progress: Progress) => JSX.Element
@@ -336,18 +336,32 @@ export namespace Async {
               renderAround * 2,
             this.state.value.length
           )
-          return React.createElement(
-            this.props.virtualization.wrapperComponentClass || 'div',
-            {
-              style: {
-                paddingTop: firstIndexOnScreen * this.props.virtualization.rowHeight,
-                paddingBottom: (this.state.value.length - lastIndexOnScreen) * this.props.virtualization.rowHeight
-              }
-            },
-            this.state.value
-              .slice(firstIndexOnScreen, lastIndexOnScreen)
-              .map(value => this.props.children(value.item, value.progress, value.setItem))
-          )
+          const firstBlockHeight = firstIndexOnScreen * this.props.virtualization.rowHeight
+          const lastBlockHeight = (this.state.value.length - lastIndexOnScreen) * this.props.virtualization.rowHeight
+          if (this.props.virtualization.wrapperComponentClass === 'tbody') {
+            return (
+              <tbody>
+                <tr style={{ height: firstBlockHeight }} />
+                {this.state.value
+                  .slice(firstIndexOnScreen, lastIndexOnScreen)
+                  .map(value => this.props.children(value.item, value.progress, value.setItem))}
+                <tr style={{ height: lastBlockHeight }} />
+              </tbody>
+            )
+          } else {
+            return React.createElement(
+              this.props.virtualization.wrapperComponentClass || 'div',
+              {
+                style: {
+                  paddingTop: firstBlockHeight,
+                  paddingBottom: lastBlockHeight
+                }
+              },
+              this.state.value
+                .slice(firstIndexOnScreen, lastIndexOnScreen)
+                .map(value => this.props.children(value.item, value.progress, value.setItem))
+            )
+          }
         }
       } else {
         return this.props.placeholder ? this.props.placeholder(this.state.allProgress) : null
