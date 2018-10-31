@@ -297,6 +297,8 @@ export namespace Async {
     childKey?: keyof T
     virtualization?: {
       rowHeight: number
+      containerHeight: number
+      scrollTop: number
     }
     placeholder?: (progress: Progress) => JSX.Element
     children: (data: T, progress: Progress, setItem: (value: T) => void) => JSX.Element
@@ -305,22 +307,15 @@ export namespace Async {
   export interface ArrayState<T> {
     value: { item: T; progress: Progress; setItem: (value: T) => void }[] | null
     allProgress: Progress
-    lastIndexOnScreen: number
-    firstIndexOnScreen: number
   }
 
   export class Array<T> extends React.Component<ArrayProps<T>, ArrayState<T>> {
     subscriptions: Subscription[] = []
     itemSubmitSubject = new Subject<{ item: T; idx: number }>()
     loadSubject = new Subject()
-    virtualizedRef = React.createRef<HTMLDivElement>()
     state: ArrayState<T> = {
       allProgress: Progress.Normal,
-      value: null,
-      firstIndexOnScreen: 0,
-      lastIndexOnScreen: this.props.virtualization
-        ? Math.ceil(window.innerHeight / this.props.virtualization.rowHeight)
-        : 0
+      value: null
     }
     setItem = (value: T, idx: number) => {
       this.itemSubmitSubject.next({ item: value, idx })
@@ -334,29 +329,34 @@ export namespace Async {
             </React.Fragment>
           ))
         } else {
+          const top = this.props.virtualization.scrollTop
+          const firstIndexOnScreen = Math.floor(top / this.props.virtualization.rowHeight)
+          const lastIndexOnScreen =
+            Math.ceil(this.props.virtualization.containerHeight / this.props.virtualization.rowHeight) +
+            firstIndexOnScreen
           return (
-            <div ref={this.virtualizedRef}>
+            <div>
               <div
+                key="top"
                 style={{
-                  height: this.state.firstIndexOnScreen * this.props.virtualization.rowHeight
+                  height: firstIndexOnScreen * this.props.virtualization.rowHeight
                 }}
               />
-              {[...this.state.value]
-                .splice(this.state.firstIndexOnScreen, this.state.lastIndexOnScreen)
-                .map((value, idx) => (
-                  <div
-                    key={
-                      this.props.childKey
-                        ? value.item[this.props.childKey].toString()
-                        : this.state.firstIndexOnScreen + idx.toString()
-                    }
-                  >
-                    {this.props.children(value.item, value.progress, value.setItem)}
-                  </div>
-                ))}
+              {[...this.state.value].splice(firstIndexOnScreen, lastIndexOnScreen).map((value, idx) => (
+                <div
+                  key={
+                    this.props.childKey
+                      ? value.item[this.props.childKey].toString()
+                      : firstIndexOnScreen + idx.toString()
+                  }
+                >
+                  {this.props.children(value.item, value.progress, value.setItem)}
+                </div>
+              ))}
               <div
+                key="bottom"
                 style={{
-                  height: (this.state.value.length - this.state.lastIndexOnScreen) * this.props.virtualization.rowHeight
+                  height: (this.state.value.length - lastIndexOnScreen) * this.props.virtualization.rowHeight
                 }}
               />
             </div>
@@ -367,7 +367,6 @@ export namespace Async {
       }
     }
     componentWillUnmount() {
-      window.removeEventListener('scroll', this.handleScroll)
       this.subscriptions.forEach(s => {
         s.unsubscribe()
       })
@@ -384,23 +383,7 @@ export namespace Async {
         return idx1 === idx2
       }
     }
-    handleScroll = () => {
-      const table = this.virtualizedRef.current
-      if (table) {
-        const rect = table.getBoundingClientRect()
-        const firstIndexOnScreen = Math.floor(-rect.top / this.props.virtualization!.rowHeight)
-        const lastIndexOnScreen =
-          Math.ceil(window.innerHeight / this.props.virtualization!.rowHeight) + firstIndexOnScreen
-        this.setState({
-          lastIndexOnScreen,
-          firstIndexOnScreen
-        })
-      }
-    }
     componentDidMount() {
-      if (this.props.virtualization) {
-        window.addEventListener('scroll', this.handleScroll)
-      }
       this.subscriptions.push(
         this.loadSubject
           .startWith(0)
