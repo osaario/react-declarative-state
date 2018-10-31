@@ -330,12 +330,12 @@ export namespace Async {
           ))
         } else {
           const top = this.props.virtualization.scrollTop
-          const firstIndexOnScreen = Math.floor(top / this.props.virtualization.rowHeight)
+          const firstIndexOnScreen = Math.floor(top / this.props.virtualization!.rowHeight)
           const lastIndexOnScreen =
             Math.ceil(this.props.virtualization.containerHeight / this.props.virtualization.rowHeight) +
             firstIndexOnScreen
           return (
-            <div>
+            <React.Fragment>
               <div
                 key="top"
                 style={{
@@ -359,7 +359,7 @@ export namespace Async {
                   height: (this.state.value.length - lastIndexOnScreen) * this.props.virtualization.rowHeight
                 }}
               />
-            </div>
+            </React.Fragment>
           )
         }
       } else {
