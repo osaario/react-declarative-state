@@ -1,6 +1,6 @@
 {
   "name": "declarative-components",
-  "version": "0.0.33-development",
+  "version": "0.0.34-development",
   "description": "",
   "keywords": [],
   "main": "dist/declarative-components.umd.js",
