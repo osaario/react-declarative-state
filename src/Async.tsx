@@ -299,6 +299,7 @@ export namespace Async {
       rowHeight: number
       containerHeight: number
       scrollTop: number
+      wrapperComponentClass?: string
       renderAround?: number
     }
     placeholder?: (progress: Progress) => JSX.Element
@@ -324,11 +325,7 @@ export namespace Async {
     render() {
       if (this.state.value) {
         if (!this.props.virtualization) {
-          return this.state.value.map((value, idx) => (
-            <React.Fragment key={this.props.childKey ? value.item[this.props.childKey].toString() : idx.toString()}>
-              {this.props.children(value.item, value.progress, value.setItem)}
-            </React.Fragment>
-          ))
+          return this.state.value.map(value => this.props.children(value.item, value.progress, value.setItem))
         } else {
           const top = this.props.virtualization.scrollTop
           const renderAround = this.props.virtualization.renderAround ? this.props.virtualization.renderAround : 5
@@ -339,17 +336,17 @@ export namespace Async {
               renderAround * 2,
             this.state.value.length
           )
-          return (
-            <div
-              style={{
+          return React.createElement(
+            this.props.virtualization.wrapperComponentClass || 'div',
+            {
+              style: {
                 paddingTop: firstIndexOnScreen * this.props.virtualization.rowHeight,
                 paddingBottom: (this.state.value.length - lastIndexOnScreen) * this.props.virtualization.rowHeight
-              }}
-            >
-              {this.state.value
-                .slice(firstIndexOnScreen, lastIndexOnScreen)
-                .map(value => this.props.children(value.item, value.progress, value.setItem))}
-            </div>
+              }
+            },
+            this.state.value
+              .slice(firstIndexOnScreen, lastIndexOnScreen)
+              .map(value => this.props.children(value.item, value.progress, value.setItem))
           )
         }
       } else {
