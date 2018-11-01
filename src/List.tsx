@@ -3,9 +3,7 @@ import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
 
 export interface ListProps<T> {
-  itemSetter?: (value: T) => Promise<T>
-  getter: () => Promise<T[]>
-  childKey?: keyof T
+  initialValue: Promise<T[]>
   virtualization?: {
     rowHeight: number
     containerHeight: number
@@ -14,23 +12,23 @@ export interface ListProps<T> {
     renderAround?: number
   }
   placeholder?: (progress: Async.Progress) => JSX.Element
-  children: (data: T, progress: Async.Progress, setItem: (value: T) => void) => JSX.Element
+  children: (data: T, progress: Async.Progress, setItem: (value: Promise<T>) => void) => JSX.Element
 }
 
 export interface ListState<T> {
-  value: { item: T; progress: Async.Progress; setItem: (value: T) => void }[] | null
+  value: { item: T; progress: Async.Progress; setItem: (value: Promise<T>) => void }[] | null
   allProgress: Async.Progress
 }
 
 export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
   subscriptions: Subscription[] = []
-  itemSubmitSubject = new Subject<{ item: T; idx: number }>()
+  itemSubmitSubject = new Subject<{ item: Promise<T>; idx: number }>()
   loadSubject = new Subject()
   state: ListState<T> = {
     allProgress: Async.Progress.Normal,
     value: null
   }
-  setItem = (value: T, idx: number) => {
+  setItem = (value: Promise<T>, idx: number) => {
     this.itemSubmitSubject.next({ item: value, idx })
   }
   render() {
@@ -83,18 +81,6 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
       s.unsubscribe()
     })
   }
-  componentDidUpdate(prevProps: ListProps<T>) {
-    if (this.props.getter !== prevProps.getter) {
-      this.loadSubject.next()
-    }
-  }
-  areItemsEqual = (item1: T, idx1: number, item2: T, idx2: number) => {
-    if (this.props.childKey) {
-      return item1[this.props.childKey] === item2[this.props.childKey]
-    } else {
-      return idx1 === idx2
-    }
-  }
   componentDidMount() {
     this.subscriptions.push(
       this.loadSubject
@@ -106,7 +92,7 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
         })
         .startWith(0)
         .switchMap(() => {
-          return Observable.fromPromise(this.props.getter()).catch(() => {
+          return Observable.fromPromise(this.props.initialValue).catch(() => {
             this.setState({
               allProgress: Async.Progress.Error
             })
@@ -121,7 +107,7 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
               return {
                 item: v,
                 progress: Async.Progress.Normal,
-                setItem: (value: T) => {
+                setItem: (value: Promise<T>) => {
                   this.setItem(value, idx)
                 }
               }
@@ -135,7 +121,7 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
           this.setState(state => {
             return {
               value: state.value!.map((v, idx) => {
-                if (this.areItemsEqual(item.item, item.idx, v.item, idx)) {
+                if (item.idx === idx) {
                   return {
                     ...v,
                     progress: Async.Progress.Progressing
@@ -147,7 +133,7 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
           })
         })
         .flatMap(value => {
-          return Observable.fromPromise(this.props.itemSetter!(value.item))
+          return Observable.fromPromise(value.item)
             .map(item => {
               return {
                 idx: value.idx,
@@ -158,7 +144,7 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
               this.setState(state => {
                 return {
                   value: state.value!.map((v, idx) => {
-                    if (this.areItemsEqual(value.item, value.idx, v.item, idx)) {
+                    if (value.idx === idx) {
                       return {
                         ...v,
                         progress: Async.Progress.Error
@@ -177,11 +163,11 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
             return {
               value: state.value!.map(
                 (v, idx) =>
-                  this.areItemsEqual(value!.item, value!.idx, v.item, idx)
+                  idx === value!.idx
                     ? {
                         item: value!.item,
                         progress: Async.Progress.Normal,
-                        setItem: (value: T) => {
+                        setItem: (value: Promise<T>) => {
                           this.setItem(value, idx)
                         }
                       }
