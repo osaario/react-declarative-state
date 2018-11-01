@@ -2,12 +2,18 @@ import { Async } from './Async'
 import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
 
+// throw Error('TODOODO tee tästä searchable ja sortable yms mässyä !!!!')
+
 export interface VariableProps<T> {
-  setter?: (value: T) => Promise<T>
-  getter: () => Promise<T>
+  initialValue: Promise<T>
   onValueSet?: (value: T) => void
   placeholder?: (progress: Async.Progress, asyncType: Async.Type) => JSX.Element
-  children: (data: T, progress: Async.Progress, setValue: (value: T) => void, asyncType: Async.Type) => JSX.Element
+  children: (
+    data: T,
+    progress: Async.Progress,
+    setValue: (value: Promise<T>) => void,
+    asyncType: Async.Type
+  ) => JSX.Element
 }
 
 export interface VariableState<T> {
@@ -18,14 +24,14 @@ export interface VariableState<T> {
 
 export class Variable<T> extends React.Component<VariableProps<T>, VariableState<T>> {
   subscriptions: Subscription[] = []
-  submitSubject = new Subject<T>()
+  submitSubject = new Subject<Promise<T>>()
   loadSubject = new Subject()
   state: VariableState<T> = {
     progress: Async.Progress.Normal,
     type: Async.Type.Load,
     value: null
   }
-  setValue = (data: T) => {
+  setValue = (data: Promise<T>) => {
     this.submitSubject.next(data)
   }
   render() {
@@ -40,11 +46,6 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
       s.unsubscribe()
     })
   }
-  componentDidUpdate(prevProps: VariableProps<T>) {
-    if (this.props.getter !== prevProps.getter) {
-      this.loadSubject.next()
-    }
-  }
   componentDidMount() {
     this.subscriptions.push(
       this.loadSubject
@@ -57,7 +58,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
         })
         .startWith(0)
         .switchMap(() => {
-          return Observable.fromPromise(this.props.getter()).catch(() => {
+          return Observable.fromPromise(this.props.initialValue).catch(() => {
             this.setState({
               progress: Async.Progress.Error,
               type: Async.Type.Load
@@ -82,15 +83,13 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
         })
       })
       .switchMap(value => {
-        return Observable.fromPromise(this.props.setter ? this.props.setter(value) : Promise.resolve(value)).catch(
-          () => {
-            this.setState({
-              progress: Async.Progress.Error,
-              type: Async.Type.Update
-            })
-            return Observable.of(null)
-          }
-        )
+        return Observable.fromPromise(value).catch(() => {
+          this.setState({
+            progress: Async.Progress.Error,
+            type: Async.Type.Update
+          })
+          return Observable.of(null)
+        })
       })
       .filter(x => !!x)
     this.subscriptions.push(
