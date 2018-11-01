@@ -15,6 +15,8 @@ export class ScrollContainer extends React.Component<
     containerHeight: null
   }
 
+  // expose scrollTo !!!!
+
   render() {
     const { children, ...restProps } = this.props
     return (

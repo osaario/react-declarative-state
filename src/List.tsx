@@ -12,21 +12,37 @@ export interface ListProps<T> {
     renderAround?: number
   }
   placeholder?: (progress: Async.Progress) => JSX.Element
-  children: (data: T, progress: Async.Progress, setItem: (value: Promise<T>) => void) => JSX.Element
+  children: (
+    data: T,
+    progress: Async.Progress,
+    setItem: (value: Promise<T>) => void,
+    removeItem: (value: Promise<null>) => void
+  ) => JSX.Element
 }
 
 export interface ListState<T> {
-  value: { item: T; progress: Async.Progress; setItem: (value: Promise<T>) => void }[] | null
+  value:
+    | {
+        item: T
+        progress: Async.Progress
+        setItem: (value: Promise<T>) => void
+        removeItem: (value: Promise<null>) => void
+      }[]
+    | null
   allProgress: Async.Progress
 }
 
 export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
   subscriptions: Subscription[] = []
   itemSubmitSubject = new Subject<{ item: Promise<T>; idx: number }>()
+  itemRemoveSubject = new Subject<{ item: Promise<null>; idx: number }>()
   loadSubject = new Subject()
   state: ListState<T> = {
     allProgress: Async.Progress.Normal,
     value: null
+  }
+  removeItem = (value: Promise<null>, idx: number) => {
+    this.itemRemoveSubject.next({ item: value, idx })
   }
   setItem = (value: Promise<T>, idx: number) => {
     this.itemSubmitSubject.next({ item: value, idx })
@@ -34,7 +50,9 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
   render() {
     if (this.state.value) {
       if (!this.props.virtualization) {
-        return this.state.value.map(value => this.props.children(value.item, value.progress, value.setItem))
+        return this.state.value.map(value =>
+          this.props.children(value.item, value.progress, value.setItem, value.removeItem)
+        )
       } else {
         const top = this.props.virtualization.scrollTop
         const renderAround = this.props.virtualization.renderAround ? this.props.virtualization.renderAround : 5
@@ -53,7 +71,7 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
               <tr style={{ height: firstBlockHeight }} />
               {this.state.value
                 .slice(firstIndexOnScreen, lastIndexOnScreen)
-                .map(value => this.props.children(value.item, value.progress, value.setItem))}
+                .map(value => this.props.children(value.item, value.progress, value.setItem, value.removeItem))}
               <tr style={{ height: lastBlockHeight }} />
             </tbody>
           )
@@ -68,7 +86,7 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
             },
             this.state.value
               .slice(firstIndexOnScreen, lastIndexOnScreen)
-              .map(value => this.props.children(value.item, value.progress, value.setItem))
+              .map(value => this.props.children(value.item, value.progress, value.setItem, value.removeItem))
           )
         }
       }
@@ -109,6 +127,9 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
                 progress: Async.Progress.Normal,
                 setItem: (value: Promise<T>) => {
                   this.setItem(value, idx)
+                },
+                removeItem: (value: Promise<null>) => {
+                  this.removeItem(value, idx)
                 }
               }
             })
@@ -124,6 +145,74 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
                 if (item.idx === idx) {
                   return {
                     ...v,
+                    progress: Async.Progress.Progressing,
+                    type: Async.Type.Update
+                  }
+                }
+                return v
+              })
+            }
+          })
+        })
+        .flatMap(value => {
+          return Observable.fromPromise(value.item)
+            .map(item => {
+              return {
+                idx: value.idx,
+                item
+              }
+            })
+            .catch(() => {
+              this.setState(state => {
+                return {
+                  value: state.value!.map((v, idx) => {
+                    if (value.idx === idx) {
+                      return {
+                        ...v,
+                        progress: Async.Progress.Error,
+                        type: Async.Type.Update
+                      }
+                    }
+                    return v
+                  })
+                }
+              })
+              return Observable.of(null)
+            })
+        })
+        .filter(x => !!x)
+        .subscribe(value => {
+          this.setState(state => {
+            return {
+              value: state.value!.map(
+                (v, idx) =>
+                  idx === value!.idx
+                    ? {
+                        item: value!.item,
+                        progress: Async.Progress.Normal,
+                        setItem: (value: Promise<T>) => {
+                          this.setItem(value, idx)
+                        },
+                        removeItem: (value: Promise<null>) => {
+                          this.removeItem(value, idx)
+                        }
+                      }
+                    : v
+              )!
+            }
+          })
+        })
+    )
+    this.subscriptions.push(
+      this.itemRemoveSubject
+        .do(item => {
+          this.setState(state => {
+            return {
+              value: state.value!.map((v, idx) => {
+                if (item.idx === idx) {
+                  return {
+                    ...v,
+                    type: Async.Type.Delete,
                     progress: Async.Progress.Progressing
                   }
                 }
@@ -147,6 +236,7 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
                     if (value.idx === idx) {
                       return {
                         ...v,
+                        type: Async.Type.Delete,
                         progress: Async.Progress.Error
                       }
                     }
@@ -161,18 +251,22 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
         .subscribe(value => {
           this.setState(state => {
             return {
-              value: state.value!.map(
-                (v, idx) =>
-                  idx === value!.idx
-                    ? {
-                        item: value!.item,
-                        progress: Async.Progress.Normal,
-                        setItem: (value: Promise<T>) => {
-                          this.setItem(value, idx)
-                        }
-                      }
-                    : v
-              )!
+              value: state
+                .value!.filter((__, idx) => {
+                  return idx !== value!.idx
+                })
+                .map((v, idx) => {
+                  return {
+                    item: v.item,
+                    progress: Async.Progress.Normal,
+                    setItem: (value: Promise<T>) => {
+                      this.setItem(value, idx)
+                    },
+                    removeItem: (value: Promise<null>) => {
+                      this.removeItem(value, idx)
+                    }
+                  }
+                })
             }
           })
         })
