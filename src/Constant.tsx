@@ -3,7 +3,7 @@ import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
 
 export interface ConstantProps<T> {
-  getter: () => Promise<T>
+  value: Promise<T>
   children: (data: T, progress: Async.Progress) => JSX.Element
   placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
 }
@@ -29,11 +29,6 @@ export class Constant<T> extends React.Component<ConstantProps<T>, ConstantState
       s.unsubscribe()
     })
   }
-  componentDidUpdate(prevProps: ConstantProps<T>) {
-    if (this.props.getter !== prevProps.getter) {
-      this.reloadSubject.next()
-    }
-  }
   componentDidMount() {
     this.subscriptions.push(
       this.reloadSubject
@@ -45,7 +40,7 @@ export class Constant<T> extends React.Component<ConstantProps<T>, ConstantState
         })
         .startWith(0)
         .switchMap(() => {
-          return Observable.fromPromise(this.props.getter()).catch(() => {
+          return Observable.fromPromise(this.props.value).catch(() => {
             this.setState({
               value: Async.setProgress(this.state.value, Async.Progress.Error)
             })

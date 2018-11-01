@@ -9,9 +9,9 @@ export interface VariableProps<T> {
   onValueSet?: (value: T) => void
   placeholder?: (progress: Async.Progress, asyncType: Async.Type) => JSX.Element
   children: (
-    data: T,
-    progress: Async.Progress,
+    value: T,
     setValue: (value: Promise<T>) => void,
+    progress: Async.Progress,
     asyncType: Async.Type
   ) => JSX.Element
 }
@@ -36,7 +36,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
   }
   render() {
     if (this.state.value) {
-      return this.props.children(this.state.value, this.state.progress, this.setValue, this.state.type)
+      return this.props.children(this.state.value, this.setValue, this.state.progress, this.state.type)
     } else {
       return this.props.placeholder ? this.props.placeholder(this.state.progress, this.state.type) : null
     }
