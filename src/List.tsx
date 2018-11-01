@@ -14,9 +14,10 @@ export interface ListProps<T> {
   placeholder?: (progress: Async.Progress) => JSX.Element
   children: (
     data: T,
-    progress: Async.Progress,
     setItem: (value: Promise<T>) => void,
-    removeItem: (value: Promise<null>) => void
+    removeItem: (value: Promise<null>) => void,
+    progress: Async.Progress,
+    type: Async.Type
   ) => JSX.Element
 }
 
@@ -25,6 +26,7 @@ export interface ListState<T> {
     | {
         item: T
         progress: Async.Progress
+        asyncType: Async.Type
         setItem: (value: Promise<T>) => void
         removeItem: (value: Promise<null>) => void
       }[]
@@ -51,7 +53,7 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
     if (this.state.value) {
       if (!this.props.virtualization) {
         return this.state.value.map(value =>
-          this.props.children(value.item, value.progress, value.setItem, value.removeItem)
+          this.props.children(value.item, value.setItem, value.removeItem, value.progress, value.asyncType)
         )
       } else {
         const top = this.props.virtualization.scrollTop
@@ -71,7 +73,9 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
               <tr style={{ height: firstBlockHeight }} />
               {this.state.value
                 .slice(firstIndexOnScreen, lastIndexOnScreen)
-                .map(value => this.props.children(value.item, value.progress, value.setItem, value.removeItem))}
+                .map(value =>
+                  this.props.children(value.item, value.setItem, value.removeItem, value.progress, value.asyncType)
+                )}
               <tr style={{ height: lastBlockHeight }} />
             </tbody>
           )
@@ -86,7 +90,9 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
             },
             this.state.value
               .slice(firstIndexOnScreen, lastIndexOnScreen)
-              .map(value => this.props.children(value.item, value.progress, value.setItem, value.removeItem))
+              .map(value =>
+                this.props.children(value.item, value.setItem, value.removeItem, value.progress, value.asyncType)
+              )
           )
         }
       }
@@ -125,6 +131,7 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
               return {
                 item: v,
                 progress: Async.Progress.Normal,
+                asyncType: Async.Type.Load,
                 setItem: (value: Promise<T>) => {
                   this.setItem(value, idx)
                 },
@@ -190,6 +197,7 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
                     ? {
                         item: value!.item,
                         progress: Async.Progress.Normal,
+                        asyncType: Async.Type.Update,
                         setItem: (value: Promise<T>) => {
                           this.setItem(value, idx)
                         },
@@ -257,6 +265,7 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
                 })
                 .map((v, idx) => {
                   return {
+                    ...v,
                     item: v.item,
                     progress: Async.Progress.Normal,
                     setItem: (value: Promise<T>) => {
