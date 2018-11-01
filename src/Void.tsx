@@ -5,13 +5,12 @@ import { Subscription, Subject, Observable } from 'rxjs'
 // throw Error('TODOODO tee tästä searchable ja sortable yms mässyä !!!!')
 
 export interface VoidProps<T> {
-  onValueSet?: (value: T) => void
+  onChange?: (value: T) => void
   placeholder?: (progress: Async.Progress, asyncType: Async.Type) => JSX.Element
   children: (setValue: (value: Promise<T>) => void, progress: Async.Progress, asyncType: Async.Type) => JSX.Element
 }
 
 export interface VoidState<T> {
-  value: T | null
   progress: Async.Progress
   type: Async.Type
 }
@@ -22,8 +21,7 @@ export class Void<T> extends React.Component<VoidProps<T>, VoidState<T>> {
   loadSubject = new Subject()
   state: VoidState<T> = {
     progress: Async.Progress.Normal,
-    type: Async.Type.Load,
-    value: null
+    type: Async.Type.Load
   }
   setValue = (data: Promise<T>) => {
     this.submitSubject.next(data)
@@ -58,12 +56,11 @@ export class Void<T> extends React.Component<VoidProps<T>, VoidState<T>> {
       submitObs.subscribe(value => {
         this.setState(
           {
-            value,
             progress: Async.Progress.Normal,
             type: Async.Type.Update
           },
           () => {
-            if (this.props.onValueSet) this.props.onValueSet(value!)
+            if (this.props.onChange) this.props.onChange(value!)
           }
         )
       })

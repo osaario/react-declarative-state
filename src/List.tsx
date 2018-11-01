@@ -15,7 +15,7 @@ export interface ListProps<T> {
   }
   placeholder?: (progress: Async.Progress) => JSX.Element
   childKey: keyof T
-  onValueChanged?: (value: T[]) => void
+  onChange?: (value: T[]) => void
   children: (
     data: T,
     setItem: (value: Promise<T>) => void,
@@ -191,8 +191,8 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
               return L.set(['loadingStates', key, 'type'], Async.Type.Update, s)
             },
             () => {
-              if (this.props.onValueChanged) {
-                this.props.onValueChanged(
+              if (this.props.onChange) {
+                this.props.onChange(
                   this.props.value.map(item => (item[this.props.childKey].toString() === key ? value! : item))
                 )
               }
@@ -226,8 +226,8 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
               return L.set(['loadingStates', key, 'type'], Async.Type.Delete, s)
             },
             () => {
-              if (this.props.onValueChanged) {
-                this.props.onValueChanged(this.props.value.filter(item => item[this.props.childKey].toString() !== key))
+              if (this.props.onChange) {
+                this.props.onChange(this.props.value.filter(item => item[this.props.childKey].toString() !== key))
               }
             }
           )
