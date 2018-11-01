@@ -12,10 +12,12 @@ export interface ListProps<T> {
     renderAround?: number
   }
   placeholder?: (progress: Async.Progress) => JSX.Element
+  childKey: keyof T
+  onValueChanged?: (value: Promise<T[]>) => void
   children: (
     data: T,
     setItem: (value: Promise<T>) => void,
-    removeItem: (value: Promise<null>) => void,
+    removeItem: (value: Promise<string>) => void,
     progress: Async.Progress,
     type: Async.Type
   ) => JSX.Element
@@ -28,7 +30,7 @@ export interface ListState<T> {
         progress: Async.Progress
         asyncType: Async.Type
         setItem: (value: Promise<T>) => void
-        removeItem: (value: Promise<null>) => void
+        removeItem: (value: Promise<string>) => void
       }[]
     | null
   allProgress: Async.Progress
@@ -36,25 +38,27 @@ export interface ListState<T> {
 
 export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
   subscriptions: Subscription[] = []
-  itemSubmitSubject = new Subject<{ item: Promise<T>; idx: number }>()
-  itemRemoveSubject = new Subject<{ item: Promise<null>; idx: number }>()
+  itemSubmitSubject = new Subject<{ item: Promise<T>; key: string }>()
+  itemRemoveSubject = new Subject<{ item: Promise<string>; key: string }>()
   loadSubject = new Subject()
   state: ListState<T> = {
     allProgress: Async.Progress.Normal,
     value: null
   }
-  removeItem = (value: Promise<null>, idx: number) => {
-    this.itemRemoveSubject.next({ item: value, idx })
+  removeItem = (value: Promise<string>, key: string) => {
+    this.itemRemoveSubject.next({ item: value, key })
   }
-  setItem = (value: Promise<T>, idx: number) => {
-    this.itemSubmitSubject.next({ item: value, idx })
+  setItem = (value: Promise<T>, key: string) => {
+    this.itemSubmitSubject.next({ item: value, key })
   }
   render() {
     if (this.state.value) {
       if (!this.props.virtualization) {
-        return this.state.value.map(value =>
-          this.props.children(value.item, value.setItem, value.removeItem, value.progress, value.asyncType)
-        )
+        return this.state.value.map(value => (
+          <React.Fragment key={value.item[this.props.childKey].toString()}>
+            {this.props.children(value.item, value.setItem, value.removeItem, value.progress, value.asyncType)}
+          </React.Fragment>
+        ))
       } else {
         const top = this.props.virtualization.scrollTop
         const renderAround = this.props.virtualization.renderAround ? this.props.virtualization.renderAround : 5
@@ -71,11 +75,11 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
           return (
             <tbody>
               <tr style={{ height: firstBlockHeight }} />
-              {this.state.value
-                .slice(firstIndexOnScreen, lastIndexOnScreen)
-                .map(value =>
-                  this.props.children(value.item, value.setItem, value.removeItem, value.progress, value.asyncType)
-                )}
+              {this.state.value.slice(firstIndexOnScreen, lastIndexOnScreen).map(value => (
+                <React.Fragment key={value.item[this.props.childKey].toString()}>
+                  {this.props.children(value.item, value.setItem, value.removeItem, value.progress, value.asyncType)}
+                </React.Fragment>
+              ))}
               <tr style={{ height: lastBlockHeight }} />
             </tbody>
           )
@@ -90,9 +94,11 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
             },
             this.state.value
               .slice(firstIndexOnScreen, lastIndexOnScreen)
-              .map(value =>
-                this.props.children(value.item, value.setItem, value.removeItem, value.progress, value.asyncType)
-              )
+              .map(value => (
+                <React.Fragment key={value.item[this.props.childKey].toString()}>
+                  {this.props.children(value.item, value.setItem, value.removeItem, value.progress, value.asyncType)}
+                </React.Fragment>
+              ))
           )
         }
       }
@@ -104,6 +110,9 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
     this.subscriptions.forEach(s => {
       s.unsubscribe()
     })
+  }
+  onValueChanged = () => {
+    if (this.props.onValueChanged) this.props.onValueChanged(Promise.resolve(this.state.value!.map(v => v.item)))
   }
   componentDidMount() {
     this.subscriptions.push(
@@ -127,16 +136,16 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
         .subscribe(value => {
           this.setState({
             allProgress: Async.Progress.Normal,
-            value: value!.map((v, idx) => {
+            value: value!.map(v => {
               return {
                 item: v,
                 progress: Async.Progress.Normal,
                 asyncType: Async.Type.Load,
                 setItem: (value: Promise<T>) => {
-                  this.setItem(value, idx)
+                  this.setItem(value, v[this.props.childKey].toString())
                 },
-                removeItem: (value: Promise<null>) => {
-                  this.removeItem(value, idx)
+                removeItem: (value: Promise<string>) => {
+                  this.removeItem(value, v[this.props.childKey].toString())
                 }
               }
             })
@@ -148,8 +157,8 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
         .do(item => {
           this.setState(state => {
             return {
-              value: state.value!.map((v, idx) => {
-                if (item.idx === idx) {
+              value: state.value!.map(v => {
+                if (item.key === v.item[this.props.childKey].toString()) {
                   return {
                     ...v,
                     progress: Async.Progress.Progressing,
@@ -162,53 +171,46 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
           })
         })
         .flatMap(value => {
-          return Observable.fromPromise(value.item)
-            .map(item => {
+          return Observable.fromPromise(value.item).catch(() => {
+            this.setState(state => {
               return {
-                idx: value.idx,
-                item
+                value: state.value!.map(v => {
+                  if (value.key === v.item[this.props.childKey].toString()) {
+                    return {
+                      ...v,
+                      progress: Async.Progress.Error,
+                      type: Async.Type.Update
+                    }
+                  }
+                  return v
+                })
               }
             })
-            .catch(() => {
-              this.setState(state => {
-                return {
-                  value: state.value!.map((v, idx) => {
-                    if (value.idx === idx) {
-                      return {
-                        ...v,
-                        progress: Async.Progress.Error,
-                        type: Async.Type.Update
-                      }
-                    }
-                    return v
-                  })
-                }
-              })
-              return Observable.of(null)
-            })
+            return Observable.of(null)
+          })
         })
         .filter(x => !!x)
         .subscribe(value => {
           this.setState(state => {
             return {
               value: state.value!.map(
-                (v, idx) =>
-                  idx === value!.idx
+                v =>
+                  v.item[this.props.childKey].toString() === value![this.props.childKey].toString()
                     ? {
-                        item: value!.item,
+                        item: value!,
                         progress: Async.Progress.Normal,
                         asyncType: Async.Type.Update,
                         setItem: (value: Promise<T>) => {
-                          this.setItem(value, idx)
+                          this.setItem(value, v.item[this.props.childKey].toString())
                         },
-                        removeItem: (value: Promise<null>) => {
-                          this.removeItem(value, idx)
+                        removeItem: (value: Promise<string>) => {
+                          this.removeItem(value, v.item[this.props.childKey].toString())
                         }
                       }
                     : v
               )!
             }
-          })
+          }, this.onValueChanged)
         })
     )
     this.subscriptions.push(
@@ -216,12 +218,12 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
         .do(item => {
           this.setState(state => {
             return {
-              value: state.value!.map((v, idx) => {
-                if (item.idx === idx) {
+              value: state.value!.map(v => {
+                if (item.key === v.item[this.props.childKey].toString()) {
                   return {
                     ...v,
-                    type: Async.Type.Delete,
-                    progress: Async.Progress.Progressing
+                    progress: Async.Progress.Progressing,
+                    type: Async.Type.Delete
                   }
                 }
                 return v
@@ -230,38 +232,32 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
           })
         })
         .flatMap(value => {
-          return Observable.fromPromise(value.item)
-            .map(item => {
+          return Observable.fromPromise(value.item).catch(() => {
+            this.setState(state => {
               return {
-                idx: value.idx,
-                item
+                value: state.value!.map(v => {
+                  if (value.key === v.item[this.props.childKey].toString()) {
+                    return {
+                      ...v,
+                      progress: Async.Progress.Error,
+                      type: Async.Type.Delete
+                    }
+                  }
+                  return v
+                })
               }
             })
-            .catch(() => {
-              this.setState(state => {
-                return {
-                  value: state.value!.map((v, idx) => {
-                    if (value.idx === idx) {
-                      return {
-                        ...v,
-                        type: Async.Type.Delete,
-                        progress: Async.Progress.Error
-                      }
-                    }
-                    return v
-                  })
-                }
-              })
-              return Observable.of(null)
-            })
+            return Observable.of(null)
+          })
         })
         .filter(x => !!x)
-        .subscribe(value => {
+        .subscribe(removedItem => {
+          console.log({ removedItem })
           this.setState(state => {
             return {
               value: state
-                .value!.filter((__, idx) => {
-                  return idx !== value!.idx
+                .value!.filter(v => {
+                  return v.item[this.props.childKey].toString() !== removedItem!.toString()
                 })
                 .map((v, idx) => {
                   return {
@@ -269,15 +265,15 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
                     item: v.item,
                     progress: Async.Progress.Normal,
                     setItem: (value: Promise<T>) => {
-                      this.setItem(value, idx)
+                      this.setItem(value, v.item[this.props.childKey].toString())
                     },
-                    removeItem: (value: Promise<null>) => {
-                      this.removeItem(value, idx)
+                    removeItem: (value: Promise<string>) => {
+                      this.removeItem(value, v.item[this.props.childKey].toString())
                     }
                   }
                 })
             }
-          })
+          }, this.onValueChanged)
         })
     )
   }

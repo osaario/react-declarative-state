@@ -98,7 +98,6 @@ class InputInner extends React.Component<
 > {
   ref = React.createRef<any>()
   render() {
-    console.log(this.props.name, this.ref)
     if (this.props._textArea) {
       return <textarea ref={this.ref as any} {..._.omit(this.props, ['onDidMount', 'onWillUnmount', '_textArea'])} />
     } else {
@@ -146,7 +145,6 @@ export class FormScope<T, S extends keyof T> extends React.Component<
 
     if (nextProps.scope !== this.props.scope) throw Error('Scope cannot change for sub')
     if (nextProps.rootValue[nextProps.scope] !== this.props.rootValue[this.props.scope]) {
-      console.log('needs update', nextProps.scope)
       return true
     }
     return false
@@ -210,11 +208,9 @@ export class FormScope<T, S extends keyof T> extends React.Component<
         {..._.omit(_.omit(props, 'ref'), _.keys(formRules))}
         key={this.props.iteration + JSON.stringify(lensPath) + JSON.stringify(rules)}
         onDidMount={ref => {
-          console.log('insert rules', props.name, ref)
           this.props.onInsertRule(lensPath, rules, ref)
         }}
         onWillUnmount={() => {
-          console.log('remove rules', props.name)
           this.props.onRemoveRule(lensPath)
         }}
         onBlur={() => {
@@ -381,7 +377,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
           })
         })
       )
-      console.log(arr)
     } else {
       arr = _.map(e.data, (value, key) => {
         return {
@@ -389,7 +384,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
           lens: e.rootLens.concat([key])
         }
       })
-      console.log(arr)
     }
     this.setState(state => {
       return arr.reduce((agg, e) => {
@@ -431,7 +425,6 @@ export class Form<T> extends React.Component<FormProps<T>, FormState<T>> {
             })
           )
           const invalidFields = L.collect(invalidFieldsLens, this.state)
-          console.log('invalid', invalidFields)
           if (invalidFields.length > 0) {
             invalidFields[0].ref.current.focus()
             this.setState(state => {
