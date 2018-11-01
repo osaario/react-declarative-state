@@ -15,11 +15,13 @@ export interface ListProps<T> {
   }
   placeholder?: (progress: Async.Progress) => JSX.Element
   childKey: keyof T
+  itemSetter?: (value: T) => Promise<T>
+  itemDeleter?: (value: T) => Promise<string>
   onChange?: (value: T[]) => void
   children: (
     data: T,
-    setItem: (value: Promise<T>) => void,
-    removeItem: (value: Promise<string>) => void,
+    setItem: (value: T) => void,
+    removeItem: (value: T) => void,
     progress: Async.Progress,
     type: Async.Type
   ) => JSX.Element
@@ -30,39 +32,31 @@ export interface ListState<T> {
     [key: string]: {
       progress: Async.Progress
       asyncType: Async.Type
-      setItem: (value: Promise<T>) => void
-      removeItem: (value: Promise<string>) => void
     }
   }
 }
 
 export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
   subscriptions: Subscription[] = []
-  itemSubmitSubject = new Subject<{ item: Promise<T>; key: string }>()
-  itemRemoveSubject = new Subject<{ item: Promise<string>; key: string }>()
+  itemSubmitSubject = new Subject<T>()
+  itemRemoveSubject = new Subject<T>()
   state: ListState<T> = {
-    loadingStates: this.getLoadingStates(this.props)
+    loadingStates: {}
   }
-  removeItem = (value: Promise<string>, key: string) => {
-    this.itemRemoveSubject.next({ item: value, key })
+  removeItem = (value: T) => {
+    this.itemRemoveSubject.next(value)
   }
-  setItem = (value: Promise<T>, key: string) => {
-    this.itemSubmitSubject.next({ item: value, key })
+  setItem = (value: T) => {
+    this.itemSubmitSubject.next(value)
   }
   render() {
     if (!this.props.virtualization) {
       return this.props.value.map(value => {
         const key = value[this.props.childKey].toString()
-        const loadingState = this.state.loadingStates[key]
+        const loadingState = this.state.loadingStates[key] || { progress: Async.Progress.Normal, type: Async.Type.Load }
         return (
           <React.Fragment key={value[this.props.childKey].toString()}>
-            {this.props.children(
-              value,
-              loadingState.setItem,
-              loadingState.removeItem,
-              loadingState.progress,
-              loadingState.asyncType
-            )}
+            {this.props.children(value, this.setItem, this.removeItem, loadingState.progress, loadingState.asyncType)}
           </React.Fragment>
         )
       })
@@ -84,13 +78,16 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
             <tr style={{ height: firstBlockHeight }} />
             {this.props.value.slice(firstIndexOnScreen, lastIndexOnScreen).map(value => {
               const key = value[this.props.childKey].toString()
-              const loadingState = this.state.loadingStates[key]
+              const loadingState = this.state.loadingStates[key] || {
+                progress: Async.Progress.Normal,
+                type: Async.Type.Load
+              }
               return (
                 <React.Fragment key={value[this.props.childKey].toString()}>
                   {this.props.children(
                     value,
-                    loadingState.setItem,
-                    loadingState.removeItem,
+                    this.setItem,
+                    this.removeItem,
                     loadingState.progress,
                     loadingState.asyncType
                   )}
@@ -111,13 +108,16 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
           },
           this.props.value.slice(firstIndexOnScreen, lastIndexOnScreen).map(value => {
             const key = value[this.props.childKey].toString()
-            const loadingState = this.state.loadingStates[key]
+            const loadingState = this.state.loadingStates[key] || {
+              progress: Async.Progress.Normal,
+              type: Async.Type.Load
+            }
             return (
               <React.Fragment key={value[this.props.childKey].toString()}>
                 {this.props.children(
                   value,
-                  loadingState.setItem,
-                  loadingState.removeItem,
+                  this.setItem,
+                  this.removeItem,
                   loadingState.progress,
                   loadingState.asyncType
                 )}
@@ -128,56 +128,27 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
       }
     }
   }
-  getLoadingStates(props: ListProps<T>) {
-    return _.chain(props.value)
-      .groupBy(v => v[props.childKey])
-      .mapValues((value, key) => {
-        return {
-          item: value,
-          progress: Async.Progress.Normal,
-          asyncType: Async.Type.Load,
-          setItem: (value: Promise<T>) => {
-            this.setItem(value, key)
-          },
-          removeItem: (value: Promise<string>) => {
-            this.removeItem(value, key)
-          }
-        }
-      })
-      .value()
-  }
   componentWillUnmount() {
     this.subscriptions.forEach(s => {
       s.unsubscribe()
     })
   }
-  componentDidUpdate(prevProps: ListProps<T>) {
-    if (prevProps.value !== this.props.value) {
-      // preserve old loadingstates
-      this.setState(state => {
-        return {
-          loadingStates: {
-            ...this.getLoadingStates(this.props),
-            ...state.loadingStates
-          }
-        }
-      })
-    }
-  }
   componentDidMount() {
     this.subscriptions.push(
       this.itemSubmitSubject
-        .do(item => {
+        .do(value => {
+          const key = value![this.props.childKey].toString()
           this.setState(state => {
-            const s = L.set(['loadingStates', item.key, 'progress'], Async.Progress.Progressing, state)
-            return L.set(['loadingStates', item.key, 'type'], Async.Type.Update, s)
+            const s = L.set(['loadingStates', key, 'progress'], Async.Progress.Progressing, state)
+            return L.set(['loadingStates', key, 'type'], Async.Type.Update, s)
           })
         })
         .flatMap(value => {
-          return Observable.fromPromise(value.item).catch(() => {
+          const key = value![this.props.childKey].toString()
+          return Observable.fromPromise(this.props.itemSetter!(value)).catch(() => {
             this.setState(state => {
-              const s = L.set(['loadingStates', value.key, 'progress'], Async.Progress.Error, state)
-              return L.set(['loadingStates', value.key, 'type'], Async.Type.Update, s)
+              const s = L.set(['loadingStates', key, 'progress'], Async.Progress.Error, state)
+              return L.set(['loadingStates', key, 'type'], Async.Type.Update, s)
             })
             return Observable.of(null)
           })
@@ -202,17 +173,19 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
     )
     this.subscriptions.push(
       this.itemRemoveSubject
-        .do(item => {
+        .do(value => {
+          const key = value![this.props.childKey].toString()
           this.setState(state => {
-            const s = L.set(['loadingStates', item.key, 'progress'], Async.Progress.Progressing, state)
-            return L.set(['loadingStates', item.key, 'type'], Async.Type.Delete, s)
+            const s = L.set(['loadingStates', key, 'progress'], Async.Progress.Progressing, state)
+            return L.set(['loadingStates', key, 'type'], Async.Type.Delete, s)
           })
         })
         .flatMap(value => {
-          return Observable.fromPromise(value.item).catch(() => {
+          const key = value![this.props.childKey].toString()
+          return Observable.fromPromise(this.props.itemDeleter!(value)).catch(() => {
             this.setState(state => {
-              const s = L.set(['loadingStates', value.key, 'progress'], Async.Progress.Error, state)
-              return L.set(['loadingStates', value.key, 'type'], Async.Type.Delete, s)
+              const s = L.set(['loadingStates', key, 'progress'], Async.Progress.Error, state)
+              return L.set(['loadingStates', key, 'type'], Async.Type.Delete, s)
             })
             return Observable.of(null)
           })
