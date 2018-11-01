@@ -1,11 +1,12 @@
 import * as React from 'react'
 
-export interface VirtualizationContainerProps {
+export interface ScrollContainerProps
+  extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
   children: (scrollTop: number, containerHeight: number) => JSX.Element
 }
 
-export class VirtualizationContainer extends React.Component<
-  VirtualizationContainerProps,
+export class ScrollContainer extends React.Component<
+  ScrollContainerProps,
   { scrollTop: number | null; containerHeight: number | null }
 > {
   virtualizationRef = React.createRef<HTMLDivElement>()
@@ -15,18 +16,21 @@ export class VirtualizationContainer extends React.Component<
   }
 
   render() {
+    const { children, ...restProps } = this.props
     return (
       <div
+        {...restProps}
         ref={this.virtualizationRef}
         style={{
           width: '100%',
           height: '100%',
-          overflow: 'scroll',
-          position: 'absolute',
           top: 0,
           bottom: 0,
           left: 0,
-          right: 0
+          right: 0,
+          ...restProps.style,
+          overflow: 'scroll',
+          position: 'absolute'
         }}
         onScroll={e => {
           const elem = e.target as any
