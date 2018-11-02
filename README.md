@@ -15,16 +15,16 @@ npm install declarative-components
 Easily compose complex UI:s with declarative components. Instead of storing the state in the component the state is stored internally inside the declarative components. This way a change to variable is reflected only to children without the need to re-render the whole root component.
 
 ```JSX
-import { Async, Sync } from "declarative-components"
+import { Variable, Constant, Async } from "declarative-components"
 
 const App = () => (
   <div>
     <h1>Welcome to my photos</h1>
-    <Async.Const getter={() => Async.GET("https://jsonplaceholder.typicode.com/photos")}>
+    <Constant value={Async.GET("https://jsonplaceholder.typicode.com/photos")}>
       {photos => (
         <div>
           <h2>I have {photos.length} photos in total</h2>
-          <Sync.Var initialValue={10}>
+          <Variable initialValue={10}>
             {(numberOfPhotos, setNumberOfPhotos) => (
               <Fragment>
                 <div>
@@ -37,7 +37,7 @@ const App = () => (
                   </button>
                 </div>
                 {photos.slice(0, numberOfPhotos).map(photo => (
-                  <Sync.Var key={photo.id} initialValue={100}>
+                  <Variable key={photo.id} initialValue={100}>
                     {(width, setWidth) => (
                       <img
                         onClick={() => {
@@ -47,15 +47,16 @@ const App = () => (
                         src={photo.url}
                       />
                     )}
-                  </Sync.Var>
+                  </Variable>
                 ))}
               </Fragment>
             )}
-          </Sync.Var>
+          </Variable>
         </div>
       )}
-    </Async.Const>
+    </Constant>
   </div>
+)
 )
 ```
 
@@ -135,10 +136,12 @@ And actually in the above case the `h1` header is still rendered twice versus th
 Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. Same can be achieved with the *declarative* way without the need to create a *stateful* component.
 
 ```JSX
+import { Variable, Constant, Async } from "declarative-components"
+
 class Photo extends React.PureComponent {
   render() {
     return (
-      <Sync.Var initialValue={100}>
+      <Variable initialValue={100}>
         {(width, setWidth) => (
           <img
             alt=""
@@ -149,7 +152,7 @@ class Photo extends React.PureComponent {
             src={this.props.photo.url}
           />
         )}
-      </Sync.Var>
+      </Variable>
     )
   }
 }
@@ -157,11 +160,11 @@ class Photo extends React.PureComponent {
 const App = () => (
   <div>
     <h1>Welcome to my photos</h1>
-    <Async.Const getter={() => Async.GET("https://jsonplaceholder.typicode.com/photos")}>
+    <Constant value={Async.GET("https://jsonplaceholder.typicode.com/photos")}>
       {photos => (
         <div>
           <h2>I have {photos.length} photos in total</h2>
-          <Sync.Var initialValue={10}>
+          <Variable initialValue={10}>
             {(numberOfPhotos, setNumberOfPhotos) => (
               <Fragment>
                 <div>
@@ -178,10 +181,10 @@ const App = () => (
                 ))}
               </Fragment>
             )}
-          </Sync.Var>
+          </Variable>
         </div>
       )}
-    </Async.Const>
+    </Constant>
   </div>
 )
 ```
