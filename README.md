@@ -212,7 +212,7 @@ const App = () => (
           </button>
         </h1>
         <Variable
-          onValueSet={todo => {
+          onChanged={todo => {
             alert(`Todo ${todo.id} saved`)
           }}
           key={todoId}
