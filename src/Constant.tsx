@@ -1,7 +1,7 @@
 import { Async } from './Async'
 import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
-import { createObservable } from './utils'
+import { createObservable, isAsync } from './utils'
 
 export interface ConstantProps<T> {
   value: T | Promise<T> | Observable<T>
@@ -31,29 +31,35 @@ export class Constant<T> extends React.Component<ConstantProps<T>, ConstantState
     })
   }
   componentDidMount() {
-    this.subscriptions.push(
-      this.reloadSubject
-        .startWith(0)
-        .do(() => {
-          this.setState({
-            value: Async.setProgress(this.state.value, Async.Progress.Progressing)
-          })
-        })
-        .startWith(0)
-        .switchMap(() => {
-          return createObservable(this.props.value).catch(() => {
+    if (isAsync(this.props.value)) {
+      this.subscriptions.push(
+        this.reloadSubject
+          .startWith(0)
+          .do(() => {
             this.setState({
-              value: Async.setProgress(this.state.value, Async.Progress.Error)
+              value: Async.setProgress(this.state.value, Async.Progress.Progressing)
             })
-            return Observable.of(null)
           })
-        })
-        .filter(x => !!x)
-        .subscribe(value => {
-          this.setState({
-            value: Async.set(this.state.value, value!, Async.Progress.Done)
+          .startWith(0)
+          .switchMap(() => {
+            return createObservable(this.props.value).catch(() => {
+              this.setState({
+                value: Async.setProgress(this.state.value, Async.Progress.Error)
+              })
+              return Observable.of(null)
+            })
           })
-        })
-    )
+          .filter(x => !!x)
+          .subscribe(value => {
+            this.setState({
+              value: Async.set(this.state.value, value!, Async.Progress.Done)
+            })
+          })
+      )
+    } else {
+      this.setState({
+        value: Async.set(this.state.value, this.props.value as T, Async.Progress.Done)
+      })
+    }
   }
 }

@@ -95,7 +95,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
         }
       })
       .switchMap(value => {
-        if (isAsync(value)) return Observable.of(value as T)
+        if (!isAsync(value)) return Observable.of(value as T)
         else {
           return createObservable(value).catch(() => {
             this.setState({
