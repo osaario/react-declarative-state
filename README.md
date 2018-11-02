@@ -266,13 +266,15 @@ const App = () => (
 
 ### Basic state components
 
+Basic logics can be composed using these components.
+
 
 |            | Has value | `Async.Type`     | Controlled from | Descripton                                                                                                 | Shows placeholder when     |
 |------------|-----------|------------------|-----------------|------------------------------------------------------------------------------------------------------------|----------------------------|
-| Constant   | Yes       | `Load`           | -               | Resolves once and renders children                                                                         | No concrete value          |
-| Variable   | Yes       | `Load`, `Upsert` | Inside          | Resolves initialValue and renders children. When resolving new value injects progress to children.               | No concrete value or error |
-| Controlled | Yes       | `Load`           | Outside         | Resolves value every time it changes. Injects progress to children when there is no value (First resolve). | No concrete value or error |
-| Operation  | No        | `Upsert`         | -               | Injects progress of operation to children.                                                                 | Never                      |
+| `Constant`   | Yes       | `Load`           | -               | Resolves once and renders children                                                                         | No concrete value          |
+| `Variable`   | Yes       | `Load`, `Upsert` | Inside          | Resolves initialValue and renders children. When resolving new value injects progress to children.               | No concrete value or error |
+| `Controlled` | Yes       | `Load`           | Outside         | Resolves value every time it changes. Injects progress to children when there is no value (First resolve). | No concrete value or error |
+| `Operation`  | No        | `Upsert`         | -               | Injects progress of operation to children.                                                                 | Never                      |
 
 ## Acknowledgements
 
