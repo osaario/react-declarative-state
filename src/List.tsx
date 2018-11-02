@@ -27,7 +27,7 @@ export interface ListProps<T> {
   ) => JSX.Element
 }
 
-export interface ListState<T> {
+export interface ListState {
   loadingStates: {
     [key: string]: {
       progress: Async.Progress
@@ -36,11 +36,11 @@ export interface ListState<T> {
   }
 }
 
-export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
+export class List<T> extends React.Component<ListProps<T>, ListState> {
   subscriptions: Subscription[] = []
   itemSubmitSubject = new Subject<T>()
   itemRemoveSubject = new Subject<T>()
-  state: ListState<T> = {
+  state: ListState = {
     loadingStates: {}
   }
   removeItem = (value: T) => {
