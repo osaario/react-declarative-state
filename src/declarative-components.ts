@@ -6,7 +6,7 @@ export * from './Variable'
 export * from './Void'
 export * from './List'
 export * from './Form'
-export * from './formRules'
+export * from './formrules'
 
 export default {}
 
