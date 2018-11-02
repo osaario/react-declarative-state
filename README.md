@@ -226,8 +226,9 @@ const App = () => (
             >
               <Form
                 value={todo}
-                onChange={todo => updateTodo(Async.PUT("https://jsonplaceholder.typicode.com/todos/" + todoId, todo))}
-              >
+                onChange={todo => {
+                  updateTodo(Async.PUT("https://jsonplaceholder.typicode.com/todos/" + todoId, todo))
+                }}              >
                 {({ Root }) => (
                   <Fragment>
                     <Root>
