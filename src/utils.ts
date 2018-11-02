@@ -1,6 +1,10 @@
 import { Observable } from 'rxjs'
-const isObservable = require('is-observable')
 const isPromise = require('is-promise')
+const symbolObservable = require('symbol-observable').default
+
+// from https://github.com/sindresorhus/is-observable/blob/master/index.js, exports const so:
+
+const isObservable = (value: any) => Boolean(value && value[symbolObservable] && value === value[symbolObservable]())
 
 export type DCValueType<T> = T | Observable<T> | Promise<T>
 

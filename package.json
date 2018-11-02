@@ -1,6 +1,6 @@
 {
   "name": "declarative-components",
-  "version": "0.0.38-development",
+  "version": "0.0.39-development",
   "description": "",
   "keywords": [],
   "main": "dist/declarative-components.umd.js",
@@ -119,12 +119,12 @@
     "typescript": "^3.0.3"
   },
   "dependencies": {
-    "is-observable": "^1.1.0",
     "is-promise": "^2.1.0",
     "lodash": "^4.17.11",
     "partial.lenses": "^13.2.0",
     "react": "^16.6.0",
     "react-dom": "^16.6.0",
-    "rxjs": "^5.5.12"
+    "rxjs": "^5.5.12",
+    "symbol-observable": "^1.2.0"
   }
 }
