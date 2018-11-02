@@ -1,25 +1,26 @@
 import { Async } from './Async'
 import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
+import { DCValueType, createObservable } from './utils'
 
 // throw Error('TODOODO tee tästä searchable ja sortable yms mässyä !!!!')
 
 export interface VoidProps<T> {
-  onChange?: (value: T) => void
+  onChange?: (value: DCValueType<T>) => void
   placeholder?: (progress: Async.Progress, asyncType: Async.Type) => JSX.Element
   children: (setValue: (value: Promise<T>) => void, progress: Async.Progress, asyncType: Async.Type) => JSX.Element
 }
 
-export interface VoidState<T> {
+export interface VoidState {
   progress: Async.Progress
   type: Async.Type
 }
 
-export class Void<T> extends React.Component<VoidProps<T>, VoidState<T>> {
+export class Void<T> extends React.Component<VoidProps<T>, VoidState> {
   subscriptions: Subscription[] = []
   submitSubject = new Subject<Promise<T>>()
   loadSubject = new Subject()
-  state: VoidState<T> = {
+  state: VoidState = {
     progress: Async.Progress.Normal,
     type: Async.Type.Load
   }
@@ -43,7 +44,7 @@ export class Void<T> extends React.Component<VoidProps<T>, VoidState<T>> {
         })
       })
       .switchMap(value => {
-        return Observable.fromPromise(value).catch(() => {
+        return createObservable(value).catch(() => {
           this.setState({
             progress: Async.Progress.Error,
             type: Async.Type.Update

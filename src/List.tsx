@@ -15,7 +15,7 @@ export interface ListProps<T> {
   }
   placeholder?: (progress: Async.Progress) => JSX.Element
   childKey: keyof T
-  itemSetter?: (value: T) => Promise<T>
+  itemUpdater?: (value: T) => Promise<T>
   itemDeleter?: (value: T) => Promise<string>
   onChange?: (value: T[]) => void
   children: (
@@ -145,7 +145,7 @@ export class List<T> extends React.Component<ListProps<T>, ListState<T>> {
         })
         .flatMap(value => {
           const key = value![this.props.childKey].toString()
-          return Observable.fromPromise(this.props.itemSetter!(value)).catch(() => {
+          return Observable.fromPromise(this.props.itemUpdater!(value)).catch(() => {
             this.setState(state => {
               const s = L.set(['loadingStates', key, 'progress'], Async.Progress.Error, state)
               return L.set(['loadingStates', key, 'type'], Async.Type.Update, s)

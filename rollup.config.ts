@@ -16,7 +16,7 @@ export default {
     { file: pkg.module, format: 'es', sourcemap: true }
   ],
   // Indicate here external modules you don't wanna include in your bundle (i.e.: 'lodash')
-  external: ['lodash', 'rxjs', 'react', 'react-dom', 'partial.lenses'],
+  external: ['lodash', 'rxjs', 'react', 'react-dom', 'partial.lenses', 'is-promise', 'is-observable'],
   watch: {
     include: 'src/**'
   },

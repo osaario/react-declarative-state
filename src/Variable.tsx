@@ -1,16 +1,17 @@
 import { Async } from './Async'
 import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
+import { DCValueType, createObservable } from './utils'
 
 // throw Error('TODOODO tee tästä searchable ja sortable yms mässyä !!!!')
 
 export interface VariableProps<T> {
-  initialValue: Promise<T>
+  initialValue: DCValueType<T>
   onValueSet?: (value: T) => void
   placeholder?: (progress: Async.Progress, asyncType: Async.Type) => JSX.Element
   children: (
     value: T,
-    setValue: (value: Promise<T>) => void,
+    setValue: (value: DCValueType<T>) => void,
     progress: Async.Progress,
     asyncType: Async.Type
   ) => JSX.Element
@@ -24,18 +25,18 @@ export interface VariableState<T> {
 
 export class Variable<T> extends React.Component<VariableProps<T>, VariableState<T>> {
   subscriptions: Subscription[] = []
-  submitSubject = new Subject<Promise<T>>()
+  submitSubject = new Subject<DCValueType<T>>()
   loadSubject = new Subject()
   state: VariableState<T> = {
     progress: Async.Progress.Normal,
     type: Async.Type.Load,
     value: null
   }
-  setValue = (data: Promise<T>) => {
+  setValue = (data: DCValueType<T>) => {
     this.submitSubject.next(data)
   }
   render() {
-    if (this.state.value) {
+    if (this.state.value && this.state.progress !== Async.Progress.Error) {
       return this.props.children(this.state.value, this.setValue, this.state.progress, this.state.type)
     } else {
       return this.props.placeholder ? this.props.placeholder(this.state.progress, this.state.type) : null
@@ -58,7 +59,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
         })
         .startWith(0)
         .switchMap(() => {
-          return Observable.fromPromise(this.props.initialValue).catch(() => {
+          return createObservable(this.props.initialValue).catch(() => {
             this.setState({
               progress: Async.Progress.Error,
               type: Async.Type.Load
@@ -83,7 +84,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
         })
       })
       .switchMap(value => {
-        return Observable.fromPromise(value).catch(() => {
+        return createObservable(value).catch(() => {
           this.setState({
             progress: Async.Progress.Error,
             type: Async.Type.Update

@@ -1,9 +1,10 @@
 import { Async } from './Async'
 import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
+import { createObservable } from './utils'
 
 export interface ConstantProps<T> {
-  value: Promise<T>
+  value: T | Promise<T> | Observable<T>
   children: (data: T, progress: Async.Progress) => JSX.Element
   placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
 }
@@ -40,7 +41,7 @@ export class Constant<T> extends React.Component<ConstantProps<T>, ConstantState
         })
         .startWith(0)
         .switchMap(() => {
-          return Observable.fromPromise(this.props.value).catch(() => {
+          return createObservable(this.props.value).catch(() => {
             this.setState({
               value: Async.setProgress(this.state.value, Async.Progress.Error)
             })
