@@ -7,7 +7,7 @@ import { DCValueType, createObservable } from './utils'
 
 export interface VariableProps<T> {
   initialValue: DCValueType<T>
-  onValueSet?: (value: T) => void
+  onChanged?: (value: T) => void
   placeholder?: (progress: Async.Progress, asyncType: Async.Type) => JSX.Element
   children: (
     value: T,
@@ -102,7 +102,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
             type: Async.Type.Update
           },
           () => {
-            if (this.props.onValueSet) this.props.onValueSet(value!)
+            if (this.props.onChanged) this.props.onChanged(value!)
           }
         )
       })
