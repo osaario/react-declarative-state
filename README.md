@@ -192,7 +192,7 @@ const App = () => (
 
 ### Drop-In Asynchronous
 
-Values can be of synchronous or asynchronous it makes no difference. You will get a progress and asyncType injected to children renderer where you can see what the progress (`Progressing, Error, Idle`) state and type (`Create, Remove, Update, Load`) are.
+Values can be of synchronous or asynchronous nature, it makes no difference. You will get a progress and asyncType injected to children renderer from where you can see what the progress (`Progressing, Error, Idle`) state and type (`Create, Remove, Update, Load`) are.
 
 ```JSX
 import { Variable, Form, Async } from "declarative-components"
