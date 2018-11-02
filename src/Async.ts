@@ -59,7 +59,7 @@ export namespace Async {
   }
 
   export function isLoading(progress: Progress, type: Type) {
-    return progress === Progress.Progressing && type === Async.Type.Load
+    return progress === Progress.Progressing && type === Type.Load
   }
 
   const headers = {
