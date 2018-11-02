@@ -1,30 +1,30 @@
 import { Async } from './Async'
 import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
-import { DCValueType, createObservable } from './utils'
+import { DCValueType, createObservable, isAsync } from './utils'
 
 // throw Error('TODOODO tee tästä searchable ja sortable yms mässyä !!!!')
 
-export interface VoidProps<T> {
-  onChange?: (value: DCValueType<T>) => void
+export interface OperationProps<T> {
+  onDone?: (value: T) => void
   placeholder?: (progress: Async.Progress, asyncType: Async.Type) => JSX.Element
   children: (setValue: (value: Promise<T>) => void, progress: Async.Progress, asyncType: Async.Type) => JSX.Element
 }
 
-export interface VoidState {
+export interface OperationState {
   progress: Async.Progress
   type: Async.Type
 }
 
-export class Void<T> extends React.Component<VoidProps<T>, VoidState> {
+export class Operation<T> extends React.Component<OperationProps<T>, OperationState> {
   subscriptions: Subscription[] = []
-  submitSubject = new Subject<Promise<T>>()
+  submitSubject = new Subject<DCValueType<T>>()
   loadSubject = new Subject()
-  state: VoidState = {
+  state: OperationState = {
     progress: Async.Progress.Normal,
     type: Async.Type.Load
   }
-  setValue = (data: Promise<T>) => {
+  setValue = (data: DCValueType<T>) => {
     this.submitSubject.next(data)
   }
   render() {
@@ -37,20 +37,26 @@ export class Void<T> extends React.Component<VoidProps<T>, VoidState> {
   }
   componentDidMount() {
     const submitObs = this.submitSubject
-      .do(() => {
-        this.setState({
-          progress: Async.Progress.Progressing,
-          type: Async.Type.Update
-        })
-      })
-      .switchMap(value => {
-        return createObservable(value).catch(() => {
+      .do(operation => {
+        if (isAsync(operation)) {
           this.setState({
-            progress: Async.Progress.Error,
+            progress: Async.Progress.Progressing,
             type: Async.Type.Update
           })
-          return Observable.of(null)
-        })
+        }
+      })
+      .switchMap(value => {
+        if (!isAsync) {
+          return Observable.of(value as T)
+        } else {
+          return createObservable(value).catch(() => {
+            this.setState({
+              progress: Async.Progress.Error,
+              type: Async.Type.Update
+            })
+            return Observable.of(null)
+          })
+        }
       })
       .filter(x => !!x)
     this.subscriptions.push(
@@ -61,7 +67,7 @@ export class Void<T> extends React.Component<VoidProps<T>, VoidState> {
             type: Async.Type.Update
           },
           () => {
-            if (this.props.onChange) this.props.onChange(value!)
+            if (this.props.onDone) this.props.onDone(value!)
           }
         )
       })
