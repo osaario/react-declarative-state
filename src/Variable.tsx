@@ -48,34 +48,42 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
     })
   }
   componentDidMount() {
-    this.subscriptions.push(
-      this.loadSubject
-        .startWith(0)
-        .do(() => {
-          this.setState({
-            progress: Async.Progress.Progressing,
-            type: Async.Type.Load
-          })
-        })
-        .startWith(0)
-        .switchMap(() => {
-          return createObservable(this.props.initialValue).catch(() => {
+    if (isAsync(this.props.initialValue)) {
+      this.subscriptions.push(
+        this.loadSubject
+          .startWith(0)
+          .do(() => {
             this.setState({
-              progress: Async.Progress.Error,
+              progress: Async.Progress.Progressing,
               type: Async.Type.Load
             })
-            return Observable.of(null)
           })
-        })
-        .filter(x => !!x)
-        .subscribe(value => {
-          this.setState({
-            progress: Async.Progress.Normal,
-            type: Async.Type.Load,
-            value
+          .startWith(0)
+          .switchMap(() => {
+            return createObservable(this.props.initialValue).catch(() => {
+              this.setState({
+                progress: Async.Progress.Error,
+                type: Async.Type.Load
+              })
+              return Observable.of(null)
+            })
           })
-        })
-    )
+          .filter(x => !!x)
+          .subscribe(value => {
+            this.setState({
+              progress: Async.Progress.Normal,
+              type: Async.Type.Load,
+              value
+            })
+          })
+      )
+    } else {
+      this.setState({
+        progress: Async.Progress.Normal,
+        type: Async.Type.Load,
+        value: this.props.initialValue as T
+      })
+    }
     const submitObs = this.submitSubject
       .do(operation => {
         // skip unneccessary loading indicators on sync operations
