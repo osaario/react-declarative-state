@@ -195,10 +195,10 @@ const App = () => (
 Asynchronous `Var` and `Const` components let you define getters and setters (`Var`) as Promises.
 
 ```JSX
-import { Sync, Async, Form } from "declarative-components"
+import { Variable, Form, Async } from "declarative-components"
 
 const App = () => (
-  <Sync.Var initialValue={1}>
+  <Variable initialValue={1}>
     {(todoId, setTodoId) => (
       <Fragment>
         <h1>
@@ -211,26 +211,30 @@ const App = () => (
             Next
           </button>
         </h1>
-        <Async.Var
+        <Variable
           onValueSet={todo => {
             alert(`Todo ${todo.id} saved`)
           }}
-          setter={value => Async.PUT("https://jsonplaceholder.typicode.com/todos/" + todoId, value)}
-          getter={() => Async.GET("https://jsonplaceholder.typicode.com/todos/" + todoId)}
+          key={todoId}
+          initialValue={Async.GET("https://jsonplaceholder.typicode.com/todos/" + todoId)}
         >
-          {(todo, progress, updateTodo, asyncType) => (
-            <p
+          {(todo, updateTodo, progress, asyncType) => (
+            <div
               style={{
                 opacity: Async.isLoading(progress, asyncType) ? 0.5 : 1
               }}
             >
-              <Form value={todo} onChange={updateTodo}>
+              <Form
+                value={todo}
+                onChange={todo => {
+                  return updateTodo(Async.PUT("https://jsonplaceholder.typicode.com/todos/" + todoId, todo))
+                }}
+              >
                 {({ Root }) => (
                   <Fragment>
                     <Root>
                       {({ Input, Validation }) => (
                         <Fragment>
-                          <Input type="checkbox" name="completed" />
                           <Validation for="title">
                             {validation => (
                               <span style={{ color: validation ? "red" : undefined }}>
@@ -248,12 +252,12 @@ const App = () => (
                   </Fragment>
                 )}
               </Form>
-            </p>
+            </div>
           )}
-        </Async.Var>
+        </Variable>
       </Fragment>
     )}
-  </Sync.Var>
+  </Variable>
 )
 ```
 
