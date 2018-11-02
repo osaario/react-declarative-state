@@ -195,7 +195,7 @@ const App = () => (
 Values can be of synchronous or asynchronous nature (`Promise`, `Observable` or concrete value), it makes no difference. You will get a progress and asyncType injected to children renderer from where you can see what the progress (`Progressing, Error, Idle`) state and type (`Create, Remove, Update, Load`) are.
 
 ```JSX
-import { Variable, Form, Async } from "declarative-components"
+import { Variable, Form, Async, Controlled, Operation } from "declarative-components"
 
 const App = () => (
   <Variable initialValue={1}>
@@ -211,49 +211,52 @@ const App = () => (
             Next
           </button>
         </h1>
-        <Variable
-          onChanged={todo => {
-            alert(`Todo ${todo.id} saved`)
-          }}
-          key={todoId}
-          initialValue={Async.GET("https://jsonplaceholder.typicode.com/todos/" + todoId)}
-        >
-          {(todo, updateTodo, progress, asyncType) => (
+        <Controlled value={Async.GET("https://jsonplaceholder.typicode.com/todos/" + todoId)}>
+          {(todo, loadProgress, asyncType) => (
             <div
               style={{
-                opacity: Async.isLoading(progress, asyncType) ? 0.5 : 1
+                opacity: loadProgress === Async.Progress.Progressing ? 0.5 : 1
               }}
             >
-              <Form
-                value={todo}
-                onChange={todo => {
-                  updateTodo(Async.PUT("https://jsonplaceholder.typicode.com/todos/" + todoId, todo))
-                }}              >
-                {({ Root }) => (
-                  <Fragment>
-                    <Root>
-                      {({ Input, Validation }) => (
-                        <Fragment>
-                          <Validation for="title">
-                            {validation => (
-                              <span style={{ color: validation ? "red" : undefined }}>
-                                <label>Todo title</label>
-                                <Input minLength={3} notEmpty={true} maxLength={100} name="title" />
-                              </span>
-                            )}
-                          </Validation>
-                        </Fragment>
-                      )}
-                    </Root>
-                    <button type="submit" disabled={progress === Async.Progress.Progressing}>
-                      Save Todo
-                    </button>
-                  </Fragment>
+              <Operation
+                onChange={() => {
+                  alert("saved")
+                }}
+              >
+                {(updateTodo, updateProgress) => (
+                  <Form
+                    value={todo}
+                    onChange={todo => {
+                      updateTodo(Async.PUT("https://jsonplaceholder.typicode.com/todos/" + todoId, todo))
+                    }}
+                  >
+                    {({ Root }) => (
+                      <Fragment>
+                        <Root>
+                          {({ Input, Validation }) => (
+                            <Fragment>
+                              <Validation for="title">
+                                {validation => (
+                                  <span style={{ color: validation ? "red" : undefined }}>
+                                    <label>Todo title</label>
+                                    <Input minLength={3} notEmpty={true} maxLength={100} name="title" />
+                                  </span>
+                                )}
+                              </Validation>
+                            </Fragment>
+                          )}
+                        </Root>
+                        <button type="submit" disabled={updateProgress === Async.Progress.Progressing}>
+                          Save Todo
+                        </button>
+                      </Fragment>
+                    )}
+                  </Form>
                 )}
-              </Form>
+              </Operation>
             </div>
           )}
-        </Variable>
+        </Controlled>
       </Fragment>
     )}
   </Variable>
