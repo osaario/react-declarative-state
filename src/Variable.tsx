@@ -1,7 +1,7 @@
 import { Async } from './Async'
 import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
-import { DCValueType, createObservable } from './utils'
+import { DCValueType, createObservable, isAsync } from './utils'
 
 // throw Error('TODOODO tee tästä searchable ja sortable yms mässyä !!!!')
 
@@ -77,20 +77,26 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
         })
     )
     const submitObs = this.submitSubject
-      .do(() => {
-        this.setState({
-          progress: Async.Progress.Progressing,
-          type: Async.Type.Update
-        })
-      })
-      .switchMap(value => {
-        return createObservable(value).catch(() => {
+      .do(operation => {
+        // skip unneccessary loading indicators on sync operations
+        if (isAsync(operation)) {
           this.setState({
-            progress: Async.Progress.Error,
+            progress: Async.Progress.Progressing,
             type: Async.Type.Update
           })
-          return Observable.of(null)
-        })
+        }
+      })
+      .switchMap(value => {
+        if (isAsync(value)) return Observable.of(value as T)
+        else {
+          return createObservable(value).catch(() => {
+            this.setState({
+              progress: Async.Progress.Error,
+              type: Async.Type.Update
+            })
+            return Observable.of(null)
+          })
+        }
       })
       .filter(x => !!x)
     this.subscriptions.push(

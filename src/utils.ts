@@ -8,6 +8,10 @@ const isObservable = (value: any) => Boolean(value && value[symbolObservable] &&
 
 export type DCValueType<T> = T | Observable<T> | Promise<T>
 
+export function isAsync<T>(value: DCValueType<T>) {
+  return isPromise(value) || isObservable(value)
+}
+
 export function createObservable<T>(value: DCValueType<T>): Observable<T> {
   if (isPromise(value)) return Observable.fromPromise(value as any)
   else if (isObservable(value)) return value as any
