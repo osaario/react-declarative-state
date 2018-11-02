@@ -263,6 +263,16 @@ const App = () => (
 )
 ```
 
+
+### Basic state components
+
+|            | Has value | `Async.Type`     | Controlled from |
+|------------|-----------|------------------|-----------------|
+| Constant   | Yes       | `Load`           | -               |
+| Variable   | Yes       | `Load`, `Upsert` | Inside          |
+| Controlled | Yes       | `Load`           | Outside         |
+| Operation  | No        | `Upsert`         | -               |
+
 ## Acknowledgements
 
 Library boilerplate starter: https://github.com/alexjoverm/typescript-library-starter
