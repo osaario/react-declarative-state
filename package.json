@@ -1,18 +1,24 @@
 {
-  "name": "declarative-components",
-  "version": "0.0.44-development",
-  "description": "",
-  "keywords": [],
-  "main": "dist/declarative-components.umd.js",
-  "module": "dist/declarative-components.es5.js",
-  "typings": "dist/types/declarative-components.d.ts",
+  "name": "react-declarative-state",
+  "version": "0.0.1",
+  "description": "Declarative State Components for React. Create asynchronous UI:s with ease.",
+  "keywords": [
+    "declarative",
+    "react",
+    "jsx",
+    "async",
+    "asynchronous"
+  ],
+  "main": "dist/react-declarative-state.umd.js",
+  "module": "dist/react-declarative-state.es5.js",
+  "typings": "dist/types/react-declarative-state.d.ts",
   "files": [
     "dist"
   ],
   "author": "osaario <osaario1@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/osaario/declarative-components.git"
+    "url": "git+https://github.com/osaario/react-declarative-state.git"
   },
   "license": "MIT",
   "engines": {
@@ -126,5 +132,13 @@
     "is-promise": "^2.1.0",
     "rxjs": "^5.5.12",
     "symbol-observable": "^1.2.0"
+  },
+  "bugs": {
+    "url": "https://github.com/osaario/react-declarative-state/issues"
+  },
+  "homepage": "https://github.com/osaario/react-declarative-state#readme",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
   }
 }

@@ -7,7 +7,7 @@ import json from 'rollup-plugin-json'
 
 const pkg = require('./package.json')
 
-const libraryName = 'declarative-components'
+const libraryName = 'react-declarative-state'
 
 export default {
   input: `src/${libraryName}.ts`,

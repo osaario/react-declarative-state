@@ -1,4 +1,4 @@
-# Declarative Components
+# React Declarative State Components
 
 Declarative Components for React. Create asynchronous UI:s with ease.
 
@@ -133,7 +133,7 @@ And actually in the above case the `h1` header is still rendered twice versus th
 
 ### Optimizable
 
-Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. Same can be achieved with the *declarative* way without the need to create a *stateful* component.
+Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. Same can be achieved with the _declarative_ way without the need to create a _stateful_ component.
 
 ```JSX
 import { Variable, Constant, Async } from "declarative-components"
@@ -188,7 +188,6 @@ const App = () => (
   </div>
 )
 ```
-
 
 ### Drop-In Asynchronous
 
@@ -263,16 +262,14 @@ const App = () => (
 )
 ```
 
-
 ### Basic state components
 
 Basic logics can be composed using these components.
 
-
-|            | Has value | `Async.Type`     | Controlled from | Descripton                                                                                                 | Shows placeholder when     |
-|------------|-----------|------------------|-----------------|------------------------------------------------------------------------------------------------------------|----------------------------|
+|              | Has value | `Async.Type`     | Controlled from | Descripton                                                                                                 | Shows placeholder when     |
+| ------------ | --------- | ---------------- | --------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `Constant`   | Yes       | `Load`           | -               | Resolves once and renders children                                                                         | No concrete value          |
-| `Variable`   | Yes       | `Load`, `Upsert` | Inside          | Resolves initialValue and renders children. When resolving new value injects progress to children.               | No concrete value or error |
+| `Variable`   | Yes       | `Load`, `Upsert` | Inside          | Resolves initialValue and renders children. When resolving new value injects progress to children.         | No concrete value or error |
 | `Controlled` | Yes       | `Load`           | Outside         | Resolves value every time it changes. Injects progress to children when there is no value (First resolve). | No concrete value or error |
 | `Operation`  | No        | `Upsert`         | -               | Injects progress of operation to children.                                                                 | Never                      |
 
