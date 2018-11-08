@@ -8,7 +8,7 @@ import { DCValueType, createObservable, isAsync } from './utils'
 export interface OperationProps<T> {
   onDone?: (value: T) => void
   placeholder?: (progress: Async.Progress, asyncType: Async.Type) => JSX.Element
-  children: (setValue: (value: Promise<T>) => void, progress: Async.Progress, asyncType: Async.Type) => JSX.Element
+  children: (setValue: (value: DCValueType<T>) => void, progress: Async.Progress, asyncType: Async.Type) => JSX.Element
 }
 
 export interface OperationState {

@@ -1,5 +1,3 @@
-import * as _ from 'lodash'
-
 export namespace Async {
   export const enum Type {
     Load = 1,

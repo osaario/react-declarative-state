@@ -1,3 +1,4 @@
+/*
 import * as _ from 'lodash'
 import * as React from 'react'
 
@@ -114,3 +115,4 @@ export class DataOperator<T> extends React.PureComponent<DataOperatorProps<T>, D
     this.reSortAndGroup()
   }
 }
+*/

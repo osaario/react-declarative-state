@@ -1,3 +1,4 @@
+/*
 import * as React from 'react'
 
 export interface ScrollContainerProps
@@ -63,3 +64,4 @@ export class ScrollContainer extends React.Component<
     window.addEventListener('resize', this.onResize)
   }
 }
+*/
