@@ -5,7 +5,7 @@ Declarative Components for React. Create asynchronous UI:s with ease.
 ## Installation
 
 ```
-npm install declarative-components
+npm install react-declarative-state
 ```
 
 ## Why?
