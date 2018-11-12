@@ -1,12 +1,12 @@
 export namespace Async {
-  export const enum Type {
+  export enum Type {
     Load = 1,
     Create,
     Update,
     Delete
   }
 
-  export const enum Progress {
+  export enum Progress {
     Normal = 1,
     Progressing,
     Done,
