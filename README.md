@@ -1,3 +1,7 @@
+[![Stable Release](https://img.shields.io/npm/v/react-declarative-state.svg)](https://npm.im/declarative-state)
+[![license](https://badgen.now.sh/badge/license/MIT)](./LICENSE)
+[![TypeScript](https://badges.frapsoft.com/typescript/code/typescript.svg?v=101)](https://github.com/ellerbrock/typescript-badges/)
+
 # React Declarative State Components
 
 Declarative Components for React. Create asynchronous UI:s with ease.
@@ -15,7 +19,7 @@ npm install react-declarative-state
 Easily compose complex UI:s with declarative components. Instead of storing the state in the component the state is stored internally inside the declarative components. This way a change to variable is reflected only to children without the need to re-render the whole root component.
 
 ```JSX
-import { Variable, Constant, Async } from "declarative-components"
+import { Variable, Constant, Async } from "react-declarative-state"
 
 const App = () => (
   <div>
@@ -63,7 +67,7 @@ const App = () => (
 To accomplish this kind of behavior in the traditional React style we would have to create _stateful_ subcomponents for rendering the photo and also for rendering the list.
 
 ```JSX
-import { Async } from "declarative-components"
+import { Async } from "react-declarative-state"
 
 class Photo extends React.Component {
   state = {
@@ -136,7 +140,7 @@ And actually in the above case the `h1` header is still rendered twice versus th
 Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. Same can be achieved with the _declarative_ way without the need to create a _stateful_ component.
 
 ```JSX
-import { Variable, Constant, Async } from "declarative-components"
+import { Variable, Constant, Async } from "react-declarative-state"
 
 class Photo extends React.PureComponent {
   render() {
@@ -194,7 +198,7 @@ const App = () => (
 Values can be of synchronous or asynchronous nature (`Promise`, `Observable` or concrete value), it makes no difference. You will get a progress and asyncType injected to children renderer from where you can see what the progress (`Progressing, Error, Idle`) state and type (`Create, Remove, Update, Load`) are.
 
 ```JSX
-import { Variable, Form, Async, Controlled, Operation } from "declarative-components"
+import { Variable, Form, Async, Controlled, Operation } from "react-declarative-state"
 
 const App = () => (
   <Variable initialValue={1}>
