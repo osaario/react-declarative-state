@@ -3,25 +3,28 @@ import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
 import { createObservable, isAsync, DCValueType } from './utils'
 
-export interface ControlledProps<T> {
-  value: DCValueType<T>
+export interface StreamProps<T> {
+  // Stream of sync or async values
+  value: Observable<DCValueType<T>>
+  // Children to be rendered when value
   children: (data: T, progress: Async.Progress) => JSX.Element
-  debounceTime?: number
+  // Placeholder to be rendered when there is no concrete value yet
   placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
 }
 
-export interface ControlledState<T> {
+export interface StreamState<T> {
   value: Async.Data<T | null>
 }
 
-export class Controlled<T> extends React.Component<ControlledProps<T>, ControlledState<T>> {
+/* Pass a stream of sync or async values as a prop to the Stream component. Stream will resolve these and inject progress in case of async values */
+export class Stream<T> extends React.Component<StreamProps<T>, StreamState<T>> {
   subscriptions: Subscription[] = []
   reloadSubject = new Subject<DCValueType<T>>()
-  state: ControlledState<T> = {
+  state: StreamState<T> = {
     value: Async.create(null, Async.Type.Load, Async.Progress.Progressing)
   }
   render() {
-    if (!this.state.value.data || this.state.value.state.progress === Async.Progress.Error) {
+    if (!this.state.value.data) {
       return this.props.placeholder ? this.props.placeholder(this.state.value.state.progress as any) : null
     }
     return this.props.children(this.state.value.data, this.state.value.state.progress)
@@ -31,34 +34,26 @@ export class Controlled<T> extends React.Component<ControlledProps<T>, Controlle
       s.unsubscribe()
     })
   }
-  componentDidUpdate(prevProps: ControlledProps<T>) {
-    if (this.props.value !== prevProps.value) {
-      this.reloadSubject.next(this.props.value)
-    }
-  }
   componentDidMount() {
     this.subscriptions.push(
-      this.reloadSubject
-        .do(operation => {
+      this.props
+        .value!.do(operation => {
           if (isAsync(operation)) {
             this.setState({
               value: Async.setProgress(this.state.value, Async.Progress.Progressing)
             })
           }
         })
-        .startWith(this.props.value)
         .switchMap(value => {
           if (!isAsync(value!)) {
             return Observable.of(value as T)
           }
-          return createObservable(value!)
-            .take(1)
-            .catch(() => {
-              this.setState({
-                value: Async.setProgress(this.state.value, Async.Progress.Error)
-              })
-              return Observable.of(null)
+          return createObservable(value!).catch(() => {
+            this.setState({
+              value: Async.setProgress(this.state.value, Async.Progress.Error)
             })
+            return Observable.of(null)
+          })
         })
         .filter(x => !!x)
         .subscribe(value => {

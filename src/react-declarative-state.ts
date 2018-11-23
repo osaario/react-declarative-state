@@ -3,6 +3,7 @@ export * from './Constant'
 export * from './Controlled'
 export * from './Variable'
 export * from './Operation'
+export * from './Stream'
 
 export default {}
 
