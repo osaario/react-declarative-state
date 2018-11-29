@@ -128,10 +128,10 @@
   },
   "peerDependencies": {
     "react": "^16.6.0",
-    "react-dom": "^16.6.0"
+    "react-dom": "^16.6.0",
+    "rxjs": "^5.5.12"
   },
   "dependencies": {
-    "is-promise": "^2.1.0",
     "rxjs": "^5.5.12",
     "symbol-observable": "^1.2.0"
   },

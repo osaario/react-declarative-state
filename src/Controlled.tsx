@@ -1,12 +1,11 @@
 import { Async } from './Async'
 import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
-import { createObservable, isAsync, DCValueType } from './utils'
+import { createObservable, isAsync } from './utils'
 
 export interface ControlledProps<T> {
-  value: DCValueType<T>
+  value: T | Observable<T>
   children: (data: T, progress: Async.Progress) => JSX.Element
-  debounceTime?: number
   placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
 }
 
@@ -16,7 +15,7 @@ export interface ControlledState<T> {
 
 export class Controlled<T> extends React.Component<ControlledProps<T>, ControlledState<T>> {
   subscriptions: Subscription[] = []
-  reloadSubject = new Subject<DCValueType<T>>()
+  reloadSubject = new Subject<T | Observable<T>>()
   state: ControlledState<T> = {
     value: Async.create(null, Async.Type.Load, Async.Progress.Progressing)
   }

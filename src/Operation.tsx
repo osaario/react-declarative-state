@@ -1,14 +1,18 @@
 import { Async } from './Async'
 import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
-import { DCValueType, createObservable, isAsync } from './utils'
+import { createObservable, isAsync } from './utils'
 
 // throw Error('TODOODO tee tästä searchable ja sortable yms mässyä !!!!')
 
 export interface OperationProps<T> {
   onDone?: (value: T) => void
   placeholder?: (progress: Async.Progress, asyncType: Async.Type) => JSX.Element
-  children: (setValue: (value: DCValueType<T>) => void, progress: Async.Progress, asyncType: Async.Type) => JSX.Element
+  children: (
+    setValue: (value: Observable<T> | T) => void,
+    progress: Async.Progress,
+    asyncType: Async.Type
+  ) => JSX.Element
 }
 
 export interface OperationState {
@@ -18,13 +22,13 @@ export interface OperationState {
 
 export class Operation<T> extends React.Component<OperationProps<T>, OperationState> {
   subscriptions: Subscription[] = []
-  submitSubject = new Subject<DCValueType<T>>()
+  submitSubject = new Subject<Observable<T> | T>()
   loadSubject = new Subject()
   state: OperationState = {
     progress: Async.Progress.Normal,
     type: Async.Type.Load
   }
-  setValue = (data: DCValueType<T>) => {
+  setValue = (data: Observable<T> | T) => {
     this.submitSubject.next(data)
   }
   render() {

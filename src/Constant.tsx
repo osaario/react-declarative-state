@@ -4,7 +4,7 @@ import { Subscription, Subject, Observable } from 'rxjs'
 import { createObservable, isAsync } from './utils'
 
 export interface ConstantProps<T> {
-  value: T | Promise<T> | Observable<T>
+  value: T | Observable<T>
   children: (data: T, progress: Async.Progress) => JSX.Element
   placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
 }

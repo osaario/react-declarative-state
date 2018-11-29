@@ -1,17 +1,17 @@
 import { Async } from './Async'
 import * as React from 'react'
 import { Subscription, Subject, Observable } from 'rxjs'
-import { DCValueType, createObservable, isAsync } from './utils'
+import { createObservable, isAsync } from './utils'
 
 // throw Error('TODOODO tee tästä searchable ja sortable yms mässyä !!!!')
 
 export interface VariableProps<T> {
-  initialValue: DCValueType<T>
+  initialValue: T | Observable<T>
   onChanged?: (value: T) => void
   placeholder?: (progress: Async.Progress, asyncType: Async.Type) => JSX.Element
   children: (
     value: T,
-    setValue: (value: DCValueType<T>) => void,
+    setValue: (value: T | Observable<T>) => void,
     progress: Async.Progress,
     asyncType: Async.Type
   ) => JSX.Element
@@ -25,14 +25,14 @@ export interface VariableState<T> {
 
 export class Variable<T> extends React.Component<VariableProps<T>, VariableState<T>> {
   subscriptions: Subscription[] = []
-  submitSubject = new Subject<DCValueType<T>>()
+  submitSubject = new Subject<T | Observable<T>>()
   loadSubject = new Subject()
   state: VariableState<T> = {
     progress: Async.Progress.Normal,
     type: Async.Type.Load,
     value: null
   }
-  setValue = (data: DCValueType<T>) => {
+  setValue = (data: T | Observable<T>) => {
     this.submitSubject.next(data)
   }
   render() {

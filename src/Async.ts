@@ -1,3 +1,5 @@
+import { Observable } from 'rxjs'
+
 export namespace Async {
   export enum Type {
     Load = 1,
@@ -60,59 +62,67 @@ export namespace Async {
     return progress === Progress.Progressing && type === Type.Load
   }
 
-  const headers = {
+  const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json'
   }
 
-  export function GET<T>(url: string): Promise<T> {
-    return fetch(url, {
-      method: 'GET',
-      headers: { ...headers }
-    }).then(response => {
-      if (response.ok) {
-        return response.json()
-      }
-      throw Error(response.status.toString())
-    })
+  export function GET<T>(url: string, headers?: HeadersInit): Observable<T> {
+    return Observable.of(0).switchMap(() =>
+      fetch(url, {
+        method: 'GET',
+        headers: headers ? { ...headers } : { ...defaultHeaders }
+      }).then(response => {
+        if (response.ok) {
+          return response.json()
+        }
+        throw Error(response.status.toString())
+      })
+    )
   }
 
-  export function DELETE(url: string): Promise<null> {
-    return fetch(url, {
-      method: 'DELETE',
-      headers: { ...headers }
-    }).then(response => {
-      if (response.ok) {
-        return null
-      }
-      throw Error(response.status.toString())
-    })
+  export function DELETE(url: string, headers?: HeadersInit): Observable<number> {
+    return Observable.of(0).switchMap(() =>
+      fetch(url, {
+        method: 'DELETE',
+        headers: headers ? { ...headers } : { ...defaultHeaders }
+      }).then(response => {
+        if (response.ok) {
+          return response.status
+        }
+        throw Error(response.status.toString())
+      })
+    )
   }
 
-  export function POST<T>(url: string, data: T): Promise<T> {
-    return fetch(url, {
-      method: 'POST',
-      headers: { ...headers },
-      body: JSON.stringify(data)
-    }).then(response => {
-      if (response.ok) {
-        if (response.status === 204) return response.status
-        return response.json()
-      }
-      throw Error(response.status.toString())
-    })
+  export function POST<T>(url: string, data: T, headers?: HeadersInit) {
+    return Observable.of(0).switchMap(() =>
+      fetch(url, {
+        method: 'POST',
+        headers: headers ? { ...headers } : { ...defaultHeaders },
+        body: JSON.stringify(data)
+      }).then(response => {
+        if (response.ok) {
+          if (response.status === 204) return response.status
+          return response.json()
+        }
+        throw Error(response.status.toString())
+      })
+    )
   }
 
-  export function PUT<T>(url: string, data: T): Promise<T> {
-    return fetch(url, {
-      method: 'PUT',
-      headers: { ...headers },
-      body: JSON.stringify(data)
-    }).then(response => {
-      if (response.ok) {
-        if (response.status === 204) return response.status
-        return response.json()
-      }
-      throw Error(response.status.toString())
-    })
+  export function PUT<T>(url: string, data: T, headers?: HeadersInit) {
+    return Observable.of(0).switchMap(() =>
+      fetch(url, {
+        method: 'PUT',
+        headers: headers ? { ...headers } : { ...defaultHeaders },
+        body: JSON.stringify(data)
+      }).then(response => {
+        if (response.ok) {
+          if (response.status === 204) return response.status
+          return response.json()
+        }
+        throw Error(response.status.toString())
+      })
+    )
   }
 }
