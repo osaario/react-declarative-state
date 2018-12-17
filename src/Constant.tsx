@@ -4,6 +4,7 @@ import { Subscription, Subject, Observable } from 'rxjs'
 import { createObservable, isAsync } from './utils'
 
 export interface ConstantProps<T> {
+  /** Value, if an Observable the value will be resolved and placeholder will be shown before a concreate value is obtained.  */
   value: T | Observable<T>
   children: (data: T, progress: Async.Progress) => JSX.Element
   placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
@@ -13,6 +14,7 @@ export interface ConstantState<T> {
   value: Async.Data<T | null>
 }
 
+/** Resolve a one-off value and render a placeholdern on error or before the value is obtained. */
 export class Constant<T> extends React.Component<ConstantProps<T>, ConstantState<T>> {
   subscriptions: Subscription[] = []
   reloadSubject = new Subject()
@@ -20,7 +22,7 @@ export class Constant<T> extends React.Component<ConstantProps<T>, ConstantState
     value: Async.create(null, Async.Type.Load, Async.Progress.Progressing)
   }
   render() {
-    if (!this.state.value.data) {
+    if (this.state.value.data == null) {
       return this.props.placeholder ? this.props.placeholder(this.state.value.state.progress as any) : null
     }
     return this.props.children(this.state.value.data, this.state.value.state.progress)
@@ -49,7 +51,7 @@ export class Constant<T> extends React.Component<ConstantProps<T>, ConstantState
               return Observable.of(null)
             })
           })
-          .filter(x => !!x)
+          .filter(x => x != null)
           .subscribe(value => {
             this.setState({
               value: Async.set(this.state.value, value!, Async.Progress.Done)

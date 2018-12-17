@@ -7,7 +7,6 @@ import { createObservable, isAsync } from './utils'
 
 export interface OperationProps<T> {
   onDone?: (value: T) => void
-  placeholder?: (progress: Async.Progress, asyncType: Async.Type) => JSX.Element
   children: (
     setValue: (value: Observable<T> | T) => void,
     progress: Async.Progress,
@@ -62,7 +61,7 @@ export class Operation<T> extends React.Component<OperationProps<T>, OperationSt
           })
         }
       })
-      .filter(x => !!x)
+      .filter(x => x != null)
     this.subscriptions.push(
       submitObs.subscribe(value => {
         this.setState(

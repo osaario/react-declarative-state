@@ -1,6 +1,7 @@
 import { Observable } from 'rxjs'
 
 export namespace Async {
+  /** Type of asynchronous operation */
   export enum Type {
     Load = 1,
     Create,
@@ -8,17 +9,12 @@ export namespace Async {
     Delete
   }
 
+  /** Progress of asynchronous operation */
   export enum Progress {
     Normal = 1,
     Progressing,
     Done,
     Error
-  }
-
-  export namespace Model {
-    export type Full<P extends object, G extends object> = { [K in keyof (P & G)]: (P & G)[K] }
-
-    export type Incomplete<T> = T extends Full<infer P, infer __> ? P : never
   }
 
   export interface State {

@@ -36,7 +36,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
     this.submitSubject.next(data)
   }
   render() {
-    if (this.state.value && this.state.progress !== Async.Progress.Error) {
+    if (this.state.value != null && this.state.progress !== Async.Progress.Error) {
       return this.props.children(this.state.value, this.setValue, this.state.progress, this.state.type)
     } else {
       return this.props.placeholder ? this.props.placeholder(this.state.progress, this.state.type) : null
@@ -68,7 +68,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
               return Observable.of(null)
             })
           })
-          .filter(x => !!x)
+          .filter(x => x != null)
           .subscribe(value => {
             this.setState({
               progress: Async.Progress.Normal,

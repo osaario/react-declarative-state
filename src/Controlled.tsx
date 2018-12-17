@@ -20,7 +20,7 @@ export class Controlled<T> extends React.Component<ControlledProps<T>, Controlle
     value: Async.create(null, Async.Type.Load, Async.Progress.Progressing)
   }
   render() {
-    if (!this.state.value.data || this.state.value.state.progress === Async.Progress.Error) {
+    if (this.state.value.data == null || this.state.value.state.progress === Async.Progress.Error) {
       return this.props.placeholder ? this.props.placeholder(this.state.value.state.progress as any) : null
     }
     return this.props.children(this.state.value.data, this.state.value.state.progress)
@@ -59,7 +59,7 @@ export class Controlled<T> extends React.Component<ControlledProps<T>, Controlle
               return Observable.of(null)
             })
         })
-        .filter(x => !!x)
+        .filter(x => x != null)
         .subscribe(value => {
           this.setState({
             value: Async.set(this.state.value, value!, Async.Progress.Done)
