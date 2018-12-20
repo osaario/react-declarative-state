@@ -5,8 +5,10 @@ import { createObservable, isAsync } from './utils'
 
 export interface ControlledProps<T> {
   value: T | Observable<T>
-  /** control key to drive new resolvation of value */
-  controlKey: string
+  /** optional control key to drive new resolvation of value instead of prop value change */
+  controlKey?: string
+  /* Debounce subsequent controlKey or value changes. Does not debounce first resolve. */
+  debounceTime?: number
   children: (data: T, progress: Async.Progress) => JSX.Element
   placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
 }
@@ -33,13 +35,25 @@ export class Controlled<T> extends React.Component<ControlledProps<T>, Controlle
     })
   }
   componentDidUpdate(prevProps: ControlledProps<T>) {
-    if (this.props.controlKey !== prevProps.controlKey) {
-      this.reloadSubject.next(this.props.value)
+    if (this.props.debounceTime !== prevProps.debounceTime) {
+      console.warn('Debounce time change has no effect after mount of component')
+    }
+    if (this.props.controlKey) {
+      if (this.props.controlKey !== prevProps.controlKey) {
+        this.reloadSubject.next(this.props.value)
+      }
+    } else {
+      if (this.props.value !== prevProps.value) {
+        this.reloadSubject.next(this.props.value)
+      }
     }
   }
   componentDidMount() {
+    const trigger = this.props.debounceTime
+      ? this.reloadSubject.debounceTime(this.props.debounceTime)
+      : this.reloadSubject
     this.subscriptions.push(
-      this.reloadSubject
+      trigger
         .do(operation => {
           if (isAsync(operation)) {
             this.setState({
