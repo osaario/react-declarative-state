@@ -5,6 +5,7 @@ import { createObservable, isAsync } from './utils'
 
 export interface ControlledProps<T> {
   value: T | Observable<T>
+  controlKey: string
   children: (data: T, progress: Async.Progress) => JSX.Element
   placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
 }
@@ -31,7 +32,7 @@ export class Controlled<T> extends React.Component<ControlledProps<T>, Controlle
     })
   }
   componentDidUpdate(prevProps: ControlledProps<T>) {
-    if (this.props.value !== prevProps.value) {
+    if (this.props.controlKey !== prevProps.controlKey) {
       this.reloadSubject.next(this.props.value)
     }
   }

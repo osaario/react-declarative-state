@@ -2,6 +2,7 @@ export * from './Async'
 export * from './Constant'
 export * from './Controlled'
 export * from './Variable'
+export * from './Persisted'
 export * from './Operation'
 export * from './Stream'
 
