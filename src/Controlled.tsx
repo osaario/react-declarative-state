@@ -5,6 +5,7 @@ import { createObservable, isAsync } from './utils'
 
 export interface ControlledProps<T> {
   value: T | Observable<T>
+  /** control key to drive new resolvation of value */
   controlKey: string
   children: (data: T, progress: Async.Progress) => JSX.Element
   placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
