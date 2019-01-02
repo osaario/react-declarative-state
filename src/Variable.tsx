@@ -106,7 +106,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
           })
         }
       })
-      .filter(x => !!x)
+      .filter(x => x != null)
     this.subscriptions.push(
       submitObs.subscribe(value => {
         this.setState(
