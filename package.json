@@ -1,6 +1,6 @@
 {
   "name": "react-declarative-state",
-  "version": "1.3.3",
+  "version": "1.4.0",
   "description": "Declarative State Components for React. Create asynchronous UI:s with ease.",
   "keywords": [
     "declarative",

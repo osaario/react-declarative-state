@@ -28,7 +28,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
   submitSubject = new Subject<T | Observable<T>>()
   loadSubject = new Subject()
   state: VariableState<T> = {
-    progress: Async.Progress.Normal,
+    progress: isAsync(this.props.initialValue) ? Async.Progress.Progressing : Async.Progress.Normal,
     type: Async.Type.Load,
     value: null
   }
@@ -50,23 +50,13 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
   componentDidMount() {
     if (isAsync(this.props.initialValue)) {
       this.subscriptions.push(
-        this.loadSubject
-          .startWith(0)
-          .do(() => {
+        createObservable(this.props.initialValue)
+          .catch(() => {
             this.setState({
-              progress: Async.Progress.Progressing,
+              progress: Async.Progress.Error,
               type: Async.Type.Load
             })
-          })
-          .startWith(0)
-          .switchMap(() => {
-            return createObservable(this.props.initialValue).catch(() => {
-              this.setState({
-                progress: Async.Progress.Error,
-                type: Async.Type.Load
-              })
-              return Observable.of(null)
-            })
+            return Observable.of(null)
           })
           .filter(x => x != null)
           .subscribe(value => {

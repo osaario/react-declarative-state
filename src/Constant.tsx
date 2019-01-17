@@ -35,21 +35,12 @@ export class Constant<T> extends React.Component<ConstantProps<T>, ConstantState
   componentDidMount() {
     if (isAsync(this.props.value)) {
       this.subscriptions.push(
-        this.reloadSubject
-          .startWith(0)
-          .do(() => {
+        createObservable(this.props.value)
+          .catch(() => {
             this.setState({
-              value: Async.setProgress(this.state.value, Async.Progress.Progressing)
+              value: Async.setProgress(this.state.value, Async.Progress.Error)
             })
-          })
-          .startWith(0)
-          .switchMap(() => {
-            return createObservable(this.props.value).catch(() => {
-              this.setState({
-                value: Async.setProgress(this.state.value, Async.Progress.Error)
-              })
-              return Observable.of(null)
-            })
+            return Observable.of(null)
           })
           .filter(x => x != null)
           .subscribe(value => {
