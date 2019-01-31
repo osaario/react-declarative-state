@@ -4,7 +4,9 @@
 
 # React Declarative State Components
 
-Create performant and coherent asynchronous UI:s with ease. It's also fun. Works with RxJS 5 Observables.
+Create performant and coherent asynchronous UI:s with ease. It's also fun.
+
+Works with RxJS 5 Observables.
 
 ## Installation
 
