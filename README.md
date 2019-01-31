@@ -114,7 +114,7 @@ Example also demonstrates how all the components (`Variable` in this example) ca
 
 ### Operation
 
-Different from the other components `Operation` does not hold a value at all. It just provides the *children* a function that can be called with an *async* operation (`Observable`) with progress of the operation. It calls `onDone` prop function with the result after operation is resolved.
+Different from the other components `Operation` does not hold a value at all. It just provides the *children* a function that can be called with an *async* operation (`Observable`). It then resolves the value of the operation and provides progress to children function while progressing. It calls `onDone` prop function with the result when done.
 
 ```JSX
 import { Operation, Async, Variable } from "react-declarative-state"
