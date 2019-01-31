@@ -71,7 +71,7 @@ const App = () => (
 
 ### Controlled
 
-Otherwise similiar to the `Variable` component the subsequent values of `Controlled` component is passed as a prop instead of being determined in the *children*. It's handy for f.ex. scrolling through content or implementing search functionality.
+Otherwise similiar to the `Variable` component the subsequent values of `Controlled` component is passed as a prop instead of being determined in the *children*. It's handy for f.ex. scrolling through content or implementing search functionality. The change in `controlKey` will inform the component that a new value needs to be resolved.
 
 ```JSX
 import { Controlled, Async, Variable } from "react-declarative-state"
