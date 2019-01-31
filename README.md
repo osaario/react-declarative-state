@@ -4,7 +4,7 @@
 
 # React Declarative State Components
 
-Create performant and coherent asynchronous UI:s with ease. It's also fun.
+Create performant and coherent asynchronous UI:s with ease. It's also fun. Works with RxJS 5 Observables.
 
 ## Installation
 
@@ -18,7 +18,7 @@ This library provides 4 basic components to deal with different common scenarios
 
 ### Constant
 
-`Constant` resolves a value and renders the result of the provided children function after the value is resolved. When no value has yet been resolved or there is an error, placeholder is rendered if provided.
+`Constant` resolves the value of provided `Observable` and renders the result of the provided children function after the value is resolved. When no value has yet been resolved or there is an error, placeholder is rendered if provided.
 
 ```JSX
 import React from "react"
