@@ -112,6 +112,60 @@ const App = () => (
 
 Example also demonstrates how all the components (`Variable` in this example) can also be provided with concrete values instead of async ones (`Observables`). Handy in making nested "state" in components with deep UI trees.
 
+### Operation
+
+Different from the other components `Operation` does not hold a value at all. It just provides the *children* a function that can be called with an *async* operation (`Observable`) with progress of the operation. It calls `onDone` prop function with the result after operation is resolved.
+
+```JSX
+import { Operation, Async, Variable } from "react-declarative-state"
+
+const App = () => (
+  <Operation
+    onDone={({ token }) => {
+      // Trigger navigation to landing page or something...
+      alert(`Logged in with token: ${token}`)
+    }}
+  >
+    {(doOperation, progress) => (
+      <Variable initialValue={{ password: "", email: "" }}>
+        {({ email, password }, setLogin) => (
+          <form
+            onSubmit={e => {
+              e.preventDefault()
+              doOperation(Async.POST("https://reqres.in/api/login", { email, password }))
+            }}
+          >
+            <input
+              type="email"
+              value={email}
+              onChange={e => {
+                setLogin({ email: e.target.value, password })
+              }}
+              placeholder="Email"
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={e => {
+                setLogin({ password: e.target.value, email })
+              }}
+              placeholder="Password"
+            />
+            <button disabled={progress === Async.Progress.Progressing} type="submit">
+              Login
+            </button>
+          </form>
+        )}
+      </Variable>
+    )}
+  </Operation>
+)
+```
+
+## Examples
+
+To be implemented...
+
 
 
 
