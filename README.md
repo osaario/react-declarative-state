@@ -336,7 +336,7 @@ const TodoApp = () => (
   </Variable>
 )
 export default TodoApp
-```JSX
+```
 
 
 
