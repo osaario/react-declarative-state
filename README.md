@@ -40,7 +40,7 @@ const App = () => (
 
 ### Variable
 
-Like `Constant`, `Variable` also resolves the `initialValue` and renders the result of children function after the `initialValue` is resolved. Similiarly, when no value has yet been resolved or there is an error, placeholder is rendered if provided. New value can be provided as an `Observable` or concrete value to the second argument of the children function. While that new value is being resolved the third argument will show the progress of the operation.
+Like `Constant`, `Variable` also resolves the `initialValue` and renders the result of children function after the `initialValue` is resolved. Similiarly, when no value has yet been resolved or there is an error, placeholder is rendered if provided. New value can be provided as an `Observable` or concrete value to the *function* provided as the second argument for the children function. While that new value is being resolved the third argument provided will show the progress of the operation.
 
 ```JSX
 import { Variable, Async } from "react-declarative-state"
