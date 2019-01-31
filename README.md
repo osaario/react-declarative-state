@@ -166,8 +166,177 @@ const App = () => (
 
 ## Examples
 
-To be implemented...
+### Async TodoMVC
 
+Implementation of the legendary TodoMVC (this does not look as good), but instead of synchronous, against a REST API (Mock in the example ofc).
+
+```JSX
+import React, { Fragment } from "react"
+import { Variable, Async } from "react-declarative-state"
+import { Observable } from "rxjs"
+
+/* AWESOME MOCK REST BACKEND */
+
+let todos = []
+let ID = 1
+
+const PUT = todo => {
+  return Observable.of(0)
+    .delay(200)
+    .do(() => {
+      todos = todos.map(t => (todo.id === t.id ? todo : t))
+    })
+    .map(() => todo)
+}
+
+const POST = todo => {
+  let newTodo = { ...todo, id: ID }
+  ID += 1
+  return Observable.of(0)
+    .delay(100)
+    .do(() => {
+      todos = todos.concat([newTodo])
+    })
+    .map(() => newTodo)
+}
+
+const DELETE = id => {
+  return Observable.of(0)
+    .delay(100)
+    .do(() => {
+      todos = todos.filter(t => t.id !== id)
+    })
+    .map(() => 204)
+}
+
+const SETALL = newTodos => {
+  return Observable.of(0)
+    .delay(300)
+    .do(() => {
+      todos = newTodos
+    })
+    .map(() => todos)
+}
+
+const GETALL = () => {
+  return Observable.of(0)
+    .delay(200)
+    .map(() => todos)
+}
+
+const TodoApp = () => (
+  <Variable initialValue={GETALL()}>
+    {(todos, setTodos, progress) => (
+      <div style={{ padding: 15, opacity: progress === Async.Progress.Progressing ? 0.5 : 1 }}>
+        <h1>Todos</h1>
+        <Variable initialValue={"all"}>
+          {(tab, setTab) => (
+            <Fragment>
+              <nav>
+                <a
+                  style={{ color: tab === "all" && "green" }}
+                  onClick={() => {
+                    setTab("all")
+                  }}
+                >
+                  All
+                </a>
+                <a
+                  style={{ color: tab === "active" && "green" }}
+                  onClick={() => {
+                    setTab("active")
+                  }}
+                >
+                  Active
+                </a>
+                <a
+                  style={{ color: tab === "complete" && "green" }}
+                  onClick={() => {
+                    setTab("complete")
+                  }}
+                >
+                  Complete
+                </a>
+                <button
+                  onClick={() => {
+                    const allTrue = todos.filter(todo => todo.complete).length === todos.length
+                    setTodos(
+                      SETALL(
+                        todos.map(todo => {
+                          return {
+                            ...todo,
+                            complete: !allTrue
+                          }
+                        })
+                      )
+                    )
+                  }}
+                >
+                  Toggle
+                </button>
+              </nav>
+              <input
+                placeholder="What needs to be done"
+                onKeyDown={e => {
+                  if (e.keyCode === 13) {
+                    setTodos(POST({ title: e.target.value, complete: false }).switchMap(() => GETALL()))
+                    e.target.value = ""
+                  }
+                }}
+              />
+              <ul>
+                {todos
+                  .filter(
+                    todo =>
+                      tab === "all" || (tab === "complete" && todo.complete) || (tab === "active" && !todo.complete)
+                  )
+                  .map((todo, idx) => (
+                    <li>
+                      <input
+                        type="checkbox"
+                        onChange={e => {
+                          setTodos(PUT({ ...todo, complete: e.target.checked }).switchMap(() => GETALL()))
+                        }}
+                        checked={todo.complete}
+                      />
+                      <input
+                        defaultValue={todo.title}
+                        onKeyDown={e => {
+                          if (e.keyCode === 13) {
+                            setTodos(PUT({ ...todo, title: e.target.value }).switchMap(() => GETALL()))
+                          }
+                        }}
+                      />
+                      <span
+                        style={{ color: "red", marginLeft: 15 }}
+                        onClick={() => {
+                          setTodos(DELETE(todo.id).switchMap(() => GETALL()))
+                        }}
+                      >
+                        X
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+              <footer>
+                {todos.filter(todo => !todo.complete).length} items left{" "}
+                <button
+                  onClick={() => {
+                    setTodos(SETALL(todos.filter(todo => !todo.complete)))
+                  }}
+                >
+                  Clear completed
+                </button>
+              </footer>
+            </Fragment>
+          )}
+        </Variable>
+      </div>
+    )}
+  </Variable>
+)
+export default TodoApp
+```JSX
 
 
 
