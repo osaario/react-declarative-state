@@ -341,19 +341,19 @@ const TodoApp = () => (
                     </li>
                   ))}
               </ul>
-              <footer>
-                {todos.filter(todo => !todo.complete).length} items left{" "}
-                <button
-                  onClick={() => {
-                    setTodos(SETALL(todos.filter(todo => !todo.complete)))
-                  }}
-                >
-                  Clear completed
-                </button>
-              </footer>
             </Fragment>
           )}
         </Variable>
+        <footer>
+          {todos.filter(todo => !todo.complete).length} items left{" "}
+          <button
+            onClick={() => {
+              setTodos(SETALL(todos.filter(todo => !todo.complete)))
+            }}
+          >
+            Clear completed
+          </button>
+        </footer>
       </div>
     )}
   </Variable>
