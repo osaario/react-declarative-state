@@ -116,7 +116,7 @@ Example also demonstrates how all the components (`Variable` in this example) ca
 
 ### Operation
 
-Different from the other components `Operation` does not hold a value at all. It just provides the *children* a function that can be called with an *async* operation (`Observable`). It then resolves the value of the operation and provides progress to children function while progressing. It calls `onDone` prop function with the result when done.
+Different from the other components `Operation` does not hold a value at all. It provides the *children* a function that can be called with an *async* operation (`Observable`). It then resolves the value of the operation and provides progress to children function while progressing. It calls `onDone` prop function with the result when done.
 
 ```JSX
 import { Operation, Async, Variable } from "react-declarative-state"
@@ -168,11 +168,11 @@ const App = () => (
 
 ### Async TodoMVC
 
-Implementation of the legendary TodoMVC (this does not look as good), but instead of synchronous, against a REST API (Mock in the example ofc).
+Implementation of the legendary TodoMVC (this does not look as good), but instead of synchronous, against a REST API (Mocked in the example).
 
 ```JSX
 import React, { Fragment } from "react"
-import { Variable, Async } from "react-declarative-state"
+import { Variable, Async, Operation } from "react-declarative-state"
 import { Observable } from "rxjs"
 
 /* AWESOME MOCK REST BACKEND */
@@ -275,15 +275,24 @@ const TodoApp = () => (
                   Toggle
                 </button>
               </nav>
-              <input
-                placeholder="What needs to be done"
-                onKeyDown={e => {
-                  if (e.keyCode === 13) {
-                    setTodos(POST({ title: e.target.value, complete: false }).switchMap(() => GETALL()))
-                    e.target.value = ""
-                  }
+              <Operation
+                onDone={todo => {
+                  setTodos(GETALL())
                 }}
-              />
+              >
+                {(doOperation, progress) => (
+                  <input
+                    disabled={progress === Async.Progress.Progressing}
+                    placeholder="What needs to be done"
+                    onKeyDown={e => {
+                      if (e.keyCode === 13) {
+                        doOperation(POST({ title: e.target.value, complete: false }))
+                        e.target.value = ""
+                      }
+                    }}
+                  />
+                )}
+              </Operation>
               <ul>
                 {todos
                   .filter(
@@ -291,30 +300,44 @@ const TodoApp = () => (
                       tab === "all" || (tab === "complete" && todo.complete) || (tab === "active" && !todo.complete)
                   )
                   .map((todo, idx) => (
-                    <li>
-                      <input
-                        type="checkbox"
-                        onChange={e => {
-                          setTodos(PUT({ ...todo, complete: e.target.checked }).switchMap(() => GETALL()))
-                        }}
-                        checked={todo.complete}
-                      />
-                      <input
-                        defaultValue={todo.title}
-                        onKeyDown={e => {
-                          if (e.keyCode === 13) {
-                            setTodos(PUT({ ...todo, title: e.target.value }).switchMap(() => GETALL()))
-                          }
-                        }}
-                      />
-                      <span
-                        style={{ color: "red", marginLeft: 15 }}
-                        onClick={() => {
-                          setTodos(DELETE(todo.id).switchMap(() => GETALL()))
+                    <li key={todo.id}>
+                      <Operation
+                        onDone={todo => {
+                          setTodos(GETALL())
                         }}
                       >
-                        X
-                      </span>
+                        {(doOperation, progress) => (
+                          <Fragment>
+                            <input
+                              disabled={progress === Async.Progress.Progressing}
+                              type="checkbox"
+                              onChange={e => {
+                                doOperation(PUT({ ...todo, complete: e.target.checked }))
+                              }}
+                              checked={todo.complete}
+                            />
+                            <input
+                              disabled={progress === Async.Progress.Progressing}
+                              defaultValue={todo.title}
+                              onKeyDown={e => {
+                                if (e.keyCode === 13) {
+                                  doOperation(PUT({ ...todo, title: e.target.value }))
+                                }
+                              }}
+                            />
+                            {progress !== Async.Progress.Progressing && (
+                              <span
+                                style={{ color: "red", marginLeft: 15 }}
+                                onClick={() => {
+                                  doOperation(DELETE(todo.id))
+                                }}
+                              >
+                                X
+                              </span>
+                            )}
+                          </Fragment>
+                        )}
+                      </Operation>
                     </li>
                   ))}
               </ul>
