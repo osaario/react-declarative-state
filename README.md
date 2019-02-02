@@ -16,7 +16,7 @@ npm install react-declarative-state
 
 ## Components
 
-This library provides 4 basic components to deal with different common scenarios that need asynchronous logic.
+This library provides 5 basic components to deal with different scenarios that need asynchronous logic.
 
 ### Constant
 
