@@ -48,12 +48,14 @@ export class Stream<T> extends React.Component<StreamProps<T>, StreamState<T>> {
           if (!isAsync(value!)) {
             return Observable.of(value as T)
           }
-          return createObservable(value!).catch(() => {
-            this.setState({
-              value: Async.setProgress(this.state.value, Async.Progress.Error)
+          return createObservable(value!)
+            .take(1)
+            .catch(() => {
+              this.setState({
+                value: Async.setProgress(this.state.value, Async.Progress.Error)
+              })
+              return Observable.of(null)
             })
-            return Observable.of(null)
-          })
         })
         .filter(x => x != null)
         .subscribe(value => {
