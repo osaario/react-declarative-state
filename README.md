@@ -191,7 +191,7 @@ const App = () => (
 )
 ```
 
-In the above example notice that the value uses `map` *operator* instead of the more intuitive `switchMap` bc the `switchMap` would produce a *stream* of concrete values and thus the `Stream` component would be unable to handle the *state* of when a new *Async* value is being resolved.
+In the above example notice that the value uses `map` *operator* instead of the more intuitive `switchMap` bc the `switchMap` would produce a *stream* of concrete values and thus the `Stream` component would be unable to handle the progress *state* for the resolvation of new *Async* value.
 
 ## Examples
 
