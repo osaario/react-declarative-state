@@ -4,7 +4,9 @@
 
 # React Declarative State Components
 
-Declarative Components for React. Create asynchronous UI:s with ease.
+Create performant and coherent asynchronous UI:s with ease. It's also fun.
+
+Works with RxJS 5 Observables.
 
 ## Installation
 
@@ -12,273 +14,353 @@ Declarative Components for React. Create asynchronous UI:s with ease.
 npm install react-declarative-state
 ```
 
-## Why?
+## Components
 
-### Cohesive UI:s
+This library provides 4 basic components to deal with different common scenarios that need asynchronous logic.
 
-Easily compose complex UI:s with declarative components. Instead of storing the state in the component the state is stored internally inside the declarative components. This way a change to variable is reflected only to children without the need to re-render the whole root component.
+### Constant
+
+`Constant` resolves the value of provided `Observable` and renders the result of the provided children function after the value is resolved. When no value has yet been resolved or there is an error, placeholder is rendered if provided.
 
 ```JSX
-import { Variable, Constant, Async } from "react-declarative-state"
+import React from "react"
+import { Constant, Async } from "react-declarative-state"
 
 const App = () => (
-  <div>
-    <h1>Welcome to my photos</h1>
-    <Constant value={Async.GET("https://jsonplaceholder.typicode.com/photos")}>
-      {photos => (
-        <div>
-          <h2>I have {photos.length} photos in total</h2>
-          <Variable initialValue={10}>
-            {(numberOfPhotos, setNumberOfPhotos) => (
-              <Fragment>
-                <div>
-                  <button
-                    onClick={() => {
-                      setNumberOfPhotos(numberOfPhotos + 1)
-                    }}
-                  >
-                    Show more
-                  </button>
-                </div>
-                {photos.slice(0, numberOfPhotos).map(photo => (
-                  <Variable key={photo.id} initialValue={100}>
-                    {(width, setWidth) => (
-                      <img
-                        onClick={() => {
-                          setWidth(width + 10)
-                        }}
-                        width={width}
-                        src={photo.url}
-                      />
-                    )}
-                  </Variable>
-                ))}
-              </Fragment>
-            )}
-          </Variable>
-        </div>
-      )}
-    </Constant>
-  </div>
-)
+  <Constant
+    value={Async.GET("https://jsonplaceholder.typicode.com/todos/1")}
+    placeholder={progress => (progress === Async.Progress.Error ? <label>Error</label> : <label>Loading...</label>)}
+  >
+    {({ title, completed }) => (
+      <label>
+        {title} <input type="checkbox" checked={completed} />
+      </label>
+    )}
+  </Constant>
 )
 ```
 
-To accomplish this kind of behavior in the traditional React style we would have to create _stateful_ subcomponents for rendering the photo and also for rendering the list.
+### Variable
+
+Like `Constant`, `Variable` also resolves the `initialValue` and renders the result of children function after the `initialValue` is resolved. Similiarly, when no value has yet been resolved or there is an error, placeholder is rendered if provided. New value can be provided as an `Observable` or concrete value to the *function* provided as the second argument for the children function. While that new value is being resolved the third argument provided will show the progress of the operation.
 
 ```JSX
-import { Async } from "react-declarative-state"
+import { Variable, Async } from "react-declarative-state"
 
-class Photo extends React.Component {
-  state = {
-    width: this.props.initialWidth
-  }
-  increaseWidth = () => {
-    this.setState(({ width }) => {
-      return {
-        width: width + 10
-      }
-    })
-  }
-  render() {
-    return <img onClick={this.increaseWidth} width={this.state.width} src={this.props.src} />
-  }
-}
-class PhotoList extends React.Component {
-  state = {
-    numberOfPhotos: this.props.initialNumberOfPhotos
-  }
-  increaseNumberOfPhotos = () => {
-    this.setState(({ numberOfPhotos }) => {
-      return {
-        numberOfPhotos: numberOfPhotos + 1
-      }
-    })
-  }
-  render() {
-    return (
+const App = () => (
+  <Variable
+    initialValue={Async.GET("https://jsonplaceholder.typicode.com/todos/1")}
+    placeholder={progress => (progress === Async.Progress.Error ? <label>Error</label> : <label>Loading...</label>)}
+  >
+    {({ title, completed, id }, setTodo, progress) => (
       <div>
-        <button onClick={this.increaseNumberOfPhotos}>Show more</button>
-        {this.props.photos.slice(0, this.state.numberOfPhotos).map(photo => (
-          <Photo src={photo.url} key={photo.id} initialWidth={100} />
-        ))}
+        <label>
+          {title} <input type="checkbox" checked={completed} />
+        </label>
+        <button
+          disabled={progress === Async.Progress.Loading}
+          onClick={() => {
+            setTodo(Async.GET(`https://jsonplaceholder.typicode.com/todos/${id + 1}`))
+          }}
+        >
+          Next
+        </button>
       </div>
-    )
-  }
-}
-
-class App extends React.Component {
-  state = { photos: null }
-  render() {
-    return (
-      <div>
-        <h1>Welcome to my photos</h1>
-        {this.state.photos != null && (
-          <div>
-            <h2>I have {this.state.photos.length} photos in total</h2>
-            <PhotoList photos={this.state.photos} initialNumberOfPhotos={100} />
-          </div>
-        )}
-      </div>
-    )
-  }
-  componentDidMount() {
-    Async.GET("https://jsonplaceholder.typicode.com/photos").then(photos => {
-      this.setState({ photos })
-    })
-  }
-}
-export default App
-```
-
-Certainly there is nothing wrong with this type of division of logic to smaller components and some might even prefer it this way. With declarative approach the code is more condensed and the behavior of the component is more clear at a glance.
-
-And actually in the above case the `h1` header is still rendered twice versus the declarative approach where it is only rendered once.
-
-### Optimizable
-
-Now someone would say that it's easy to optimize the traditional React approach by making the `Photo` component a `PureComponent` to avoid the full render of the list every time that the `numberOfPhotos` is changed. Same can be achieved with the _declarative_ way without the need to create a _stateful_ component.
-
-```JSX
-import { Variable, Constant, Async } from "react-declarative-state"
-
-class Photo extends React.PureComponent {
-  render() {
-    return (
-      <Variable initialValue={100}>
-        {(width, setWidth) => (
-          <img
-            alt=""
-            onClick={() => {
-              setWidth(width + 10)
-            }}
-            width={width}
-            src={this.props.photo.url}
-          />
-        )}
-      </Variable>
-    )
-  }
-}
-
-const App = () => (
-  <div>
-    <h1>Welcome to my photos</h1>
-    <Constant value={Async.GET("https://jsonplaceholder.typicode.com/photos")}>
-      {photos => (
-        <div>
-          <h2>I have {photos.length} photos in total</h2>
-          <Variable initialValue={10}>
-            {(numberOfPhotos, setNumberOfPhotos) => (
-              <Fragment>
-                <div>
-                  <button
-                    onClick={() => {
-                      setNumberOfPhotos(numberOfPhotos + 1)
-                    }}
-                  >
-                    Show more
-                  </button>
-                </div>
-                {photos.slice(0, numberOfPhotos).map(photo => (
-                  <Photo photo={photo} />
-                ))}
-              </Fragment>
-            )}
-          </Variable>
-        </div>
-      )}
-    </Constant>
-  </div>
-)
-```
-
-### Drop-In Asynchronous
-
-Values can be of synchronous or asynchronous nature (`Promise`, `Observable` or concrete value), it makes no difference. You will get a progress and asyncType injected to children renderer from where you can see what the progress (`Progressing, Error, Idle`) state and type (`Create, Remove, Update, Load`) are.
-
-```JSX
-import { Variable, Form, Async, Controlled, Operation } from "react-declarative-state"
-
-const App = () => (
-  <Variable initialValue={1}>
-    {(todoId, setTodoId) => (
-      <Fragment>
-        <h1>
-          Edit todo {todoId}{" "}
-          <button
-            onClick={() => {
-              setTodoId(todoId + 1)
-            }}
-          >
-            Next
-          </button>
-        </h1>
-        <Controlled value={Async.GET("https://jsonplaceholder.typicode.com/todos/" + todoId)}>
-          {(todo, loadProgress, asyncType) => (
-            <div
-              style={{
-                opacity: loadProgress === Async.Progress.Progressing ? 0.5 : 1
-              }}
-            >
-              <Operation
-                onChange={() => {
-                  alert("saved")
-                }}
-              >
-                {(updateTodo, updateProgress) => (
-                  <Form
-                    value={todo}
-                    onChange={todo => {
-                      updateTodo(Async.PUT("https://jsonplaceholder.typicode.com/todos/" + todoId, todo))
-                    }}
-                  >
-                    {({ Root }) => (
-                      <Fragment>
-                        <Root>
-                          {({ Input, Validation }) => (
-                            <Fragment>
-                              <Validation for="title">
-                                {validation => (
-                                  <span style={{ color: validation ? "red" : undefined }}>
-                                    <label>Todo title</label>
-                                    <Input minLength={3} notEmpty={true} maxLength={100} name="title" />
-                                  </span>
-                                )}
-                              </Validation>
-                            </Fragment>
-                          )}
-                        </Root>
-                        <button type="submit" disabled={updateProgress === Async.Progress.Progressing}>
-                          Save Todo
-                        </button>
-                      </Fragment>
-                    )}
-                  </Form>
-                )}
-              </Operation>
-            </div>
-          )}
-        </Controlled>
-      </Fragment>
     )}
   </Variable>
 )
 ```
 
-### Basic state components
+### Controlled
 
-Basic logics can be composed using these components.
+Otherwise similiar to the `Variable` component the subsequent values of `Controlled` component is passed as a prop instead of being determined in the *children*. It's handy for f.ex. scrolling through content or implementing search functionality. The change in `controlKey` will inform the component that a new value needs to be resolved.
 
-|              | Has value | `Async.Type`     | Controlled from | Descripton                                                                                                 | Shows placeholder when     |
-| ------------ | --------- | ---------------- | --------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `Constant`   | Yes       | `Load`           | -               | Resolves once and renders children                                                                         | No concrete value          |
-| `Variable`   | Yes       | `Load`, `Upsert` | Inside          | Resolves initialValue and renders children. When resolving new value injects progress to children.         | No concrete value or error |
-| `Controlled` | Yes       | `Load`           | Outside         | Resolves value every time it changes. Injects progress to children when there is no value (First resolve). | No concrete value or error |
-| `Operation`  | No        | `Upsert`         | -               | Injects progress of operation to children.                                                                 | Never                      |
+```JSX
+import { Controlled, Async, Variable } from "react-declarative-state"
 
-## Acknowledgements
+const App = () => (
+  <Variable initialValue={1}>
+    {(todoId, setTodoId) => (
+      <div>
+        <Controlled
+          debounceTime={200}
+          controlKey={todoId}
+          value={Async.GET(`https://jsonplaceholder.typicode.com/todos/${todoId}`)}
+          placeholder={progress =>
+            progress === Async.Progress.Error ? <label>Error</label> : <label>Loading...</label>
+          }
+        >
+          {({ title, completed }, progress) => (
+            <div style={{ opacity: progress === Async.Progress.Progressing ? 0.5 : 1 }}>
+              <label>
+                {title} <input type="checkbox" checked={completed} />
+              </label>
+            </div>
+          )}
+        </Controlled>
+        <br />
+        <button
+          onClick={() => {
+            setTodoId(todoId + 1)
+          }}
+        >
+          Next
+        </button>
+      </div>
+    )}
+  </Variable>
+)
+```
 
-Library boilerplate starter: https://github.com/alexjoverm/typescript-library-starter
+Example also demonstrates how all the components (`Variable` in this example) can also be provided with concrete values instead of async ones (`Observables`). Handy in making nested "state" in components with deep UI trees.
 
-## Dependencies
+### Operation
+
+Different from the other components `Operation` does not hold a value at all. It provides the *children* a function that can be called with an *async* operation (`Observable`). It then resolves the value of the operation and provides progress to children function while progressing. It calls `onDone` prop function with the result when done.
+
+```JSX
+import { Operation, Async, Variable } from "react-declarative-state"
+
+const App = () => (
+  <Operation
+    onDone={({ token }) => {
+      // Trigger navigation to landing page or something...
+      alert(`Logged in with token: ${token}`)
+    }}
+  >
+    {(doOperation, progress) => (
+      <Variable initialValue={{ password: "", email: "" }}>
+        {({ email, password }, setLogin) => (
+          <form
+            onSubmit={e => {
+              e.preventDefault()
+              doOperation(Async.POST("https://reqres.in/api/login", { email, password }))
+            }}
+          >
+            <input
+              type="email"
+              value={email}
+              onChange={e => {
+                setLogin({ email: e.target.value, password })
+              }}
+              placeholder="Email"
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={e => {
+                setLogin({ password: e.target.value, email })
+              }}
+              placeholder="Password"
+            />
+            <button disabled={progress === Async.Progress.Progressing} type="submit">
+              Login
+            </button>
+          </form>
+        )}
+      </Variable>
+    )}
+  </Operation>
+)
+```
+
+## Examples
+
+### Async TodoMVC
+
+Implementation of the legendary TodoMVC (this does not look as good), but instead of synchronous, against a REST API (Mocked in the example).
+
+```JSX
+import React, { Fragment } from "react"
+import { Variable, Async, Operation } from "react-declarative-state"
+import { Observable } from "rxjs"
+
+/* AWESOME MOCK REST BACKEND */
+
+let todos = []
+let ID = 1
+
+const PUT = todo => {
+  return Observable.of(0)
+    .delay(200)
+    .do(() => {
+      todos = todos.map(t => (todo.id === t.id ? todo : t))
+    })
+    .map(() => todo)
+}
+
+const POST = todo => {
+  let newTodo = { ...todo, id: ID }
+  ID += 1
+  return Observable.of(0)
+    .delay(100)
+    .do(() => {
+      todos = todos.concat([newTodo])
+    })
+    .map(() => newTodo)
+}
+
+const DELETE = id => {
+  return Observable.of(0)
+    .delay(100)
+    .do(() => {
+      todos = todos.filter(t => t.id !== id)
+    })
+    .map(() => 204)
+}
+
+const SETALL = newTodos => {
+  return Observable.of(0)
+    .delay(300)
+    .do(() => {
+      todos = newTodos
+    })
+    .map(() => todos)
+}
+
+const GETALL = () => {
+  return Observable.of(0)
+    .delay(200)
+    .map(() => todos)
+}
+
+const TodoApp = () => (
+  <Variable initialValue={GETALL()}>
+    {(todos, setTodos, progress) => (
+      <div style={{ padding: 15, opacity: progress === Async.Progress.Progressing ? 0.5 : 1 }}>
+        <h1>Todos</h1>
+        <Variable initialValue={"all"}>
+          {(tab, setTab) => (
+            <Fragment>
+              <nav>
+                <a
+                  style={{ color: tab === "all" && "green" }}
+                  onClick={() => {
+                    setTab("all")
+                  }}
+                >
+                  All
+                </a>
+                <a
+                  style={{ color: tab === "active" && "green" }}
+                  onClick={() => {
+                    setTab("active")
+                  }}
+                >
+                  Active
+                </a>
+                <a
+                  style={{ color: tab === "complete" && "green" }}
+                  onClick={() => {
+                    setTab("complete")
+                  }}
+                >
+                  Complete
+                </a>
+                <button
+                  onClick={() => {
+                    const allTrue = todos.filter(todo => todo.complete).length === todos.length
+                    setTodos(
+                      SETALL(
+                        todos.map(todo => {
+                          return {
+                            ...todo,
+                            complete: !allTrue
+                          }
+                        })
+                      )
+                    )
+                  }}
+                >
+                  Toggle
+                </button>
+              </nav>
+              <Operation
+                onDone={todo => {
+                  setTodos(GETALL())
+                }}
+              >
+                {(doOperation, progress) => (
+                  <input
+                    disabled={progress === Async.Progress.Progressing}
+                    placeholder="What needs to be done"
+                    onKeyDown={e => {
+                      if (e.keyCode === 13) {
+                        doOperation(POST({ title: e.target.value, complete: false }))
+                        e.target.value = ""
+                      }
+                    }}
+                  />
+                )}
+              </Operation>
+              <ul>
+                {todos
+                  .filter(
+                    todo =>
+                      tab === "all" || (tab === "complete" && todo.complete) || (tab === "active" && !todo.complete)
+                  )
+                  .map((todo, idx) => (
+                    <li key={todo.id}>
+                      <Operation
+                        onDone={todo => {
+                          setTodos(GETALL())
+                        }}
+                      >
+                        {(doOperation, progress) => (
+                          <Fragment>
+                            <input
+                              disabled={progress === Async.Progress.Progressing}
+                              type="checkbox"
+                              onChange={e => {
+                                doOperation(PUT({ ...todo, complete: e.target.checked }))
+                              }}
+                              checked={todo.complete}
+                            />
+                            <input
+                              disabled={progress === Async.Progress.Progressing}
+                              defaultValue={todo.title}
+                              onKeyDown={e => {
+                                if (e.keyCode === 13) {
+                                  doOperation(PUT({ ...todo, title: e.target.value }))
+                                }
+                              }}
+                            />
+                            {progress !== Async.Progress.Progressing && (
+                              <span
+                                style={{ color: "red", marginLeft: 15 }}
+                                onClick={() => {
+                                  doOperation(DELETE(todo.id))
+                                }}
+                              >
+                                X
+                              </span>
+                            )}
+                          </Fragment>
+                        )}
+                      </Operation>
+                    </li>
+                  ))}
+              </ul>
+            </Fragment>
+          )}
+        </Variable>
+        <footer>
+          {todos.filter(todo => !todo.complete).length} items left{" "}
+          <button
+            onClick={() => {
+              setTodos(SETALL(todos.filter(todo => !todo.complete)))
+            }}
+          >
+            Clear completed
+          </button>
+        </footer>
+      </div>
+    )}
+  </Variable>
+)
+export default TodoApp
+```
+
+
+
+
