@@ -164,6 +164,35 @@ const App = () => (
 )
 ```
 
+### Stream
+
+`Stream` is much like `Constant` but for *value* it accepts a *stream* of *Async* (`Observable<Observable<T>>`) or *Sync* (`Observable<T>`) values. It renders placeholder before the first value is resolved and after that it will provide the *children* *function* with current *data* and *progress*. 
+
+```JSX
+import { Observable } from "rxjs"
+import { Stream, Async } from "react-declarative-state"
+
+const App = () => (
+  <Stream
+    // refresh every 5s
+    value={Observable.interval(5000).map(() => Async.GET("https://jsonplaceholder.typicode.com/todos"))}
+    placeholder={progress => (progress === Async.Progress.Error ? <label>Error</label> : <label>Loading...</label>)}
+  >
+    {(todos, progress) => (
+      <div style={{ opacity: progress === Async.Progress.Progressing ? 0.5 : 1 }}>
+        {todos.map(({ title, completed }) => (
+          <div>
+            {title} <input type="checkbox" checked={completed} />
+          </div>
+        ))}
+      </div>
+    )}
+  </Stream>
+)
+```
+
+In the above example notice that the value uses `map` *operator* instead of the more intuitive `switchMap` bc the `switchMap` would produce a *stream* of concrete values and thus the `Stream` component would be unable to handle the *state* of when a new *Async* value is being resolved.
+
 ## Examples
 
 ### Async TodoMVC
