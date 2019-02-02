@@ -51,6 +51,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
     if (isAsync(this.props.initialValue)) {
       this.subscriptions.push(
         createObservable(this.props.initialValue)
+          .take(1)
           .catch(() => {
             this.setState({
               progress: Async.Progress.Error,
@@ -87,13 +88,15 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
       .switchMap(value => {
         if (!isAsync(value)) return Observable.of(value as T)
         else {
-          return createObservable(value).catch(() => {
-            this.setState({
-              progress: Async.Progress.Error,
-              type: Async.Type.Update
+          return createObservable(value)
+            .take(1)
+            .catch(() => {
+              this.setState({
+                progress: Async.Progress.Error,
+                type: Async.Type.Update
+              })
+              return Observable.of(null)
             })
-            return Observable.of(null)
-          })
         }
       })
       .filter(x => x != null)

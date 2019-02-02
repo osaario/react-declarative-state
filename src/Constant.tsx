@@ -36,6 +36,7 @@ export class Constant<T> extends React.Component<ConstantProps<T>, ConstantState
     if (isAsync(this.props.value)) {
       this.subscriptions.push(
         createObservable(this.props.value)
+          .take(1)
           .catch(() => {
             this.setState({
               value: Async.setProgress(this.state.value, Async.Progress.Error)

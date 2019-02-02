@@ -52,13 +52,15 @@ export class Operation<T> extends React.Component<OperationProps<T>, OperationSt
         if (!isAsync) {
           return Observable.of(value as T)
         } else {
-          return createObservable(value).catch(() => {
-            this.setState({
-              progress: Async.Progress.Error,
-              type: Async.Type.Update
+          return createObservable(value)
+            .take(1)
+            .catch(() => {
+              this.setState({
+                progress: Async.Progress.Error,
+                type: Async.Type.Update
+              })
+              return Observable.of(null)
             })
-            return Observable.of(null)
-          })
         }
       })
       .filter(x => x != null)
