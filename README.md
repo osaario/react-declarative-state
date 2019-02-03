@@ -14,6 +14,14 @@ Works with RxJS 5 Observables.
 npm install react-declarative-state
 ```
 
+## Philosophy
+
+There are a lot of great *state* *handling* solutions and libraries out there. For client applications though, the problem is not so much about handling the *state* in the *frontend* and more about having the *state* in the *frontend* in first place. A client application should not have any states besides the *UI* state. *State* managed by the business logic should live in the *backend* **with the business logic**.
+
+When accessing the state, parts of it need to be temporarily replicated in the *frontend*, which violates the *single source of truth*. F.ex. when you query your ride sharing apps available drivers you replicate this list (state) in the *frontend* to be able to show it in the UI. The longer the interval from the query the dirtier it gets and it is more and more likely that it is incorrect. I see that as a fundamental reason to minimize the amount and time span of replicated *state* in the *frontend*.
+
+This library want's to make it easy to take a looksie at the *state* whenever you need instead of exposing the *replicated state* to a larger scope of your client app.
+
 ## Components
 
 This library provides 5 basic components to deal with different scenarios that need asynchronous logic.
