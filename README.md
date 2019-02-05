@@ -205,7 +205,7 @@ In the above example notice that the value uses `map` *operator* instead of the 
 
 ### Async TodoMVC
 
-Implementation of the legendary TodoMVC (this does not look as good), but instead of synchronous, against a REST API (Mocked in the example).
+Implementation of the legendary TodoMVC (this does not look as good), but instead of synchronous, against a REST API (Mocked in the example). Of course written in a one function app like a boss 😜.
 
 ```JSX
 import React, { Fragment } from "react"
