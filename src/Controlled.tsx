@@ -9,8 +9,8 @@ export interface ControlledProps<T> {
   controlKey?: string
   /* Debounce subsequent controlKey or value changes. Does not debounce first resolve. */
   debounceTime?: number
-  children: (data: T, progress: Async.Progress) => JSX.Element
-  placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
+  children: (data: T, progress: Async.Progress, error?: any) => JSX.Element
+  placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error, error?: any) => JSX.Element
 }
 
 export interface ControlledState<T> {
@@ -25,9 +25,11 @@ export class Controlled<T> extends React.Component<ControlledProps<T>, Controlle
   }
   render() {
     if (this.state.value.data == null || this.state.value.state.progress === Async.Progress.Error) {
-      return this.props.placeholder ? this.props.placeholder(this.state.value.state.progress as any) : null
+      return this.props.placeholder
+        ? this.props.placeholder(this.state.value.state.progress as any, this.state.value.state.error)
+        : null
     }
-    return this.props.children(this.state.value.data, this.state.value.state.progress)
+    return this.props.children(this.state.value.data, this.state.value.state.progress, this.state.value.state.error)
   }
   componentWillUnmount() {
     this.subscriptions.forEach(s => {
@@ -57,7 +59,7 @@ export class Controlled<T> extends React.Component<ControlledProps<T>, Controlle
         .do(operation => {
           if (isAsync(operation)) {
             this.setState({
-              value: Async.setProgress(this.state.value, Async.Progress.Progressing)
+              value: Async.setProgress(this.state.value, Async.Progress.Progressing, undefined)
             })
           }
         })
@@ -68,9 +70,9 @@ export class Controlled<T> extends React.Component<ControlledProps<T>, Controlle
           }
           return createObservable(value!)
             .take(1)
-            .catch(() => {
+            .catch(err => {
               this.setState({
-                value: Async.setProgress(this.state.value, Async.Progress.Error)
+                value: Async.setProgress(this.state.value, Async.Progress.Error, err)
               })
               return Observable.of(null)
             })

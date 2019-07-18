@@ -7,16 +7,12 @@ import { createObservable, isAsync } from './utils'
 
 export interface OperationProps<T> {
   onDone?: (value: T) => void
-  children: (
-    setValue: (value: Observable<T> | T) => void,
-    progress: Async.Progress,
-    asyncType: Async.Type
-  ) => JSX.Element
+  children: (setValue: (value: Observable<T> | T) => void, progress: Async.Progress, error?: any) => JSX.Element
 }
 
 export interface OperationState {
   progress: Async.Progress
-  type: Async.Type
+  error?: any
 }
 
 export class Operation<T> extends React.Component<OperationProps<T>, OperationState> {
@@ -24,14 +20,13 @@ export class Operation<T> extends React.Component<OperationProps<T>, OperationSt
   submitSubject = new Subject<Observable<T> | T>()
   loadSubject = new Subject()
   state: OperationState = {
-    progress: Async.Progress.Normal,
-    type: Async.Type.Load
+    progress: Async.Progress.Normal
   }
   setValue = (data: Observable<T> | T) => {
     this.submitSubject.next(data)
   }
   render() {
-    return this.props.children(this.setValue, this.state.progress, this.state.type)
+    return this.props.children(this.setValue, this.state.progress, this.state.error)
   }
   componentWillUnmount() {
     this.subscriptions.forEach(s => {
@@ -44,7 +39,7 @@ export class Operation<T> extends React.Component<OperationProps<T>, OperationSt
         if (isAsync(operation)) {
           this.setState({
             progress: Async.Progress.Progressing,
-            type: Async.Type.Update
+            error: undefined
           })
         }
       })
@@ -54,10 +49,10 @@ export class Operation<T> extends React.Component<OperationProps<T>, OperationSt
         } else {
           return createObservable(value)
             .take(1)
-            .catch(() => {
+            .catch(err => {
               this.setState({
                 progress: Async.Progress.Error,
-                type: Async.Type.Update
+                error: err
               })
               return Observable.of(null)
             })
@@ -69,7 +64,7 @@ export class Operation<T> extends React.Component<OperationProps<T>, OperationSt
         this.setState(
           {
             progress: Async.Progress.Normal,
-            type: Async.Type.Update
+            error: undefined
           },
           () => {
             if (this.props.onDone) this.props.onDone(value!)

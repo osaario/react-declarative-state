@@ -7,9 +7,9 @@ export interface StreamProps<T> {
   // Stream of sync or async values
   value: Observable<T | Observable<T>>
   // Children to be rendered when value
-  children: (data: T, progress: Async.Progress) => JSX.Element
+  children: (data: T, progress: Async.Progress, error?: any) => JSX.Element
   // Placeholder to be rendered when there is no concrete value yet
-  placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
+  placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error, error?: any) => JSX.Element
 }
 
 export interface StreamState<T> {
@@ -25,9 +25,11 @@ export class Stream<T> extends React.Component<StreamProps<T>, StreamState<T>> {
   }
   render() {
     if (this.state.value.data == null) {
-      return this.props.placeholder ? this.props.placeholder(this.state.value.state.progress as any) : null
+      return this.props.placeholder
+        ? this.props.placeholder(this.state.value.state.progress as any, this.state.value.state.error)
+        : null
     }
-    return this.props.children(this.state.value.data, this.state.value.state.progress)
+    return this.props.children(this.state.value.data, this.state.value.state.progress, this.state.value.state.error)
   }
   componentWillUnmount() {
     this.subscriptions.forEach(s => {
@@ -40,7 +42,7 @@ export class Stream<T> extends React.Component<StreamProps<T>, StreamState<T>> {
         .value!.do(operation => {
           if (isAsync(operation)) {
             this.setState({
-              value: Async.setProgress(this.state.value, Async.Progress.Progressing)
+              value: Async.setProgress(this.state.value, Async.Progress.Progressing, undefined)
             })
           }
         })
@@ -50,9 +52,9 @@ export class Stream<T> extends React.Component<StreamProps<T>, StreamState<T>> {
           }
           return createObservable(value!)
             .take(1)
-            .catch(() => {
+            .catch(err => {
               this.setState({
-                value: Async.setProgress(this.state.value, Async.Progress.Error)
+                value: Async.setProgress(this.state.value, Async.Progress.Error, err)
               })
               return Observable.of(null)
             })

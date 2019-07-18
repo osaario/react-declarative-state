@@ -20,6 +20,7 @@ export namespace Async {
   export interface State {
     progress: Progress
     type: Type
+    error?: any
   }
 
   export type Data<T> = { data: T; state: State }
@@ -39,17 +40,19 @@ export namespace Async {
       data: data,
       state: {
         type: type || value.state.type,
+        error: undefined,
         progress: progress || value.state.progress
       }
     }
   }
 
-  export function setProgress<T>(value: Data<T>, progress: Progress): Data<T> {
+  export function setProgress<T>(value: Data<T>, progress: Progress, error?: any): Data<T> {
     return {
       data: value.data,
       state: {
         ...value.state,
-        progress: progress
+        progress: progress,
+        error
       }
     }
   }

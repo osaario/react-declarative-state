@@ -6,8 +6,8 @@ import { createObservable, isAsync } from './utils'
 export interface ConstantProps<T> {
   /** Value, if an Observable the value will be resolved and placeholder will be shown before a concreate value is obtained.  */
   value: T | Observable<T>
-  children: (data: T, progress: Async.Progress) => JSX.Element
-  placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error) => JSX.Element
+  children: (data: T, progress: Async.Progress, error?: any) => JSX.Element
+  placeholder?: (progress: Async.Progress.Progressing | Async.Progress.Error, error?: any) => JSX.Element
 }
 
 export interface ConstantState<T> {
@@ -23,9 +23,11 @@ export class Constant<T> extends React.Component<ConstantProps<T>, ConstantState
   }
   render() {
     if (this.state.value.data == null) {
-      return this.props.placeholder ? this.props.placeholder(this.state.value.state.progress as any) : null
+      return this.props.placeholder
+        ? this.props.placeholder(this.state.value.state.progress as any, this.state.value.state.error)
+        : null
     }
-    return this.props.children(this.state.value.data, this.state.value.state.progress)
+    return this.props.children(this.state.value.data, this.state.value.state.progress, this.state.value.state.error)
   }
   componentWillUnmount() {
     this.subscriptions.forEach(s => {
@@ -37,9 +39,9 @@ export class Constant<T> extends React.Component<ConstantProps<T>, ConstantState
       this.subscriptions.push(
         createObservable(this.props.value)
           .take(1)
-          .catch(() => {
+          .catch(err => {
             this.setState({
-              value: Async.setProgress(this.state.value, Async.Progress.Error)
+              value: Async.setProgress(this.state.value, Async.Progress.Error, err)
             })
             return Observable.of(null)
           })

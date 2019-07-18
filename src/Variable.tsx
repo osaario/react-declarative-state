@@ -8,19 +8,19 @@ import { createObservable, isAsync } from './utils'
 export interface VariableProps<T> {
   initialValue: T | Observable<T>
   onChanged?: (value: T) => void
-  placeholder?: (progress: Async.Progress, asyncType: Async.Type) => JSX.Element
+  placeholder?: (progress: Async.Progress, error?: any) => JSX.Element
   children: (
     value: T,
     setValue: (value: T | Observable<T>) => void,
     progress: Async.Progress,
-    asyncType: Async.Type
+    error?: any
   ) => JSX.Element
 }
 
 export interface VariableState<T> {
   value: T | null
   progress: Async.Progress
-  type: Async.Type
+  error?: any
 }
 
 export class Variable<T> extends React.Component<VariableProps<T>, VariableState<T>> {
@@ -29,7 +29,6 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
   loadSubject = new Subject()
   state: VariableState<T> = {
     progress: isAsync(this.props.initialValue) ? Async.Progress.Progressing : Async.Progress.Normal,
-    type: Async.Type.Load,
     value: null
   }
   setValue = (data: T | Observable<T>) => {
@@ -37,9 +36,9 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
   }
   render() {
     if (this.state.value != null && this.state.progress !== Async.Progress.Error) {
-      return this.props.children(this.state.value, this.setValue, this.state.progress, this.state.type)
+      return this.props.children(this.state.value, this.setValue, this.state.progress, this.state.error)
     } else {
-      return this.props.placeholder ? this.props.placeholder(this.state.progress, this.state.type) : null
+      return this.props.placeholder ? this.props.placeholder(this.state.progress, this.state.error) : null
     }
   }
   componentWillUnmount() {
@@ -52,10 +51,10 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
       this.subscriptions.push(
         createObservable(this.props.initialValue)
           .take(1)
-          .catch(() => {
+          .catch(err => {
             this.setState({
               progress: Async.Progress.Error,
-              type: Async.Type.Load
+              error: err
             })
             return Observable.of(null)
           })
@@ -63,7 +62,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
           .subscribe(value => {
             this.setState({
               progress: Async.Progress.Normal,
-              type: Async.Type.Load,
+              error: undefined,
               value
             })
           })
@@ -71,7 +70,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
     } else {
       this.setState({
         progress: Async.Progress.Normal,
-        type: Async.Type.Load,
+        error: undefined,
         value: this.props.initialValue as T
       })
     }
@@ -81,7 +80,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
         if (isAsync(operation)) {
           this.setState({
             progress: Async.Progress.Progressing,
-            type: Async.Type.Update
+            error: undefined
           })
         }
       })
@@ -90,10 +89,10 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
         else {
           return createObservable(value)
             .take(1)
-            .catch(() => {
+            .catch(err => {
               this.setState({
                 progress: Async.Progress.Error,
-                type: Async.Type.Update
+                error: err
               })
               return Observable.of(null)
             })
@@ -106,7 +105,7 @@ export class Variable<T> extends React.Component<VariableProps<T>, VariableState
           {
             value,
             progress: Async.Progress.Normal,
-            type: Async.Type.Update
+            error: undefined
           },
           () => {
             if (this.props.onChanged) this.props.onChanged(value!)
