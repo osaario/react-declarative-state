@@ -7,6 +7,8 @@ import { createObservable, isAsync } from './utils'
 
 export interface OperationProps<T> {
   onDone?: (value: T) => void
+  // move to Progress.Done after succesful operation
+  oneOff?: boolean
   children: (setValue: (value: Observable<T> | T) => void, progress: Async.Progress, error?: any) => JSX.Element
 }
 
@@ -63,7 +65,7 @@ export class Operation<T> extends React.Component<OperationProps<T>, OperationSt
       submitObs.subscribe(value => {
         this.setState(
           {
-            progress: Async.Progress.Normal,
+            progress: this.props.oneOff ? Async.Progress.Normal : Async.Progress.Done,
             error: undefined
           },
           () => {
