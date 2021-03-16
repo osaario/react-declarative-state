@@ -65,7 +65,7 @@ export class Operation<T> extends React.Component<OperationProps<T>, OperationSt
       submitObs.subscribe(value => {
         this.setState(
           {
-            progress: this.props.oneOff ? Async.Progress.Normal : Async.Progress.Done,
+            progress: this.props.oneOff ? Async.Progress.Done : Async.Progress.Normal,
             error: undefined
           },
           () => {
