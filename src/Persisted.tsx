@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { Subscription, Subject, Observable } from 'rxjs'
 
 export interface PersistedProps<T> {
   /** initial value if value not found in storage */
