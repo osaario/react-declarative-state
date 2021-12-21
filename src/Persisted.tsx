@@ -43,7 +43,7 @@ export class Persisted<T> extends React.Component<PersistedProps<T>, PersistedSt
   setValue = (data: T) => {
     this.setState({ value: data })
   }
-  componentWillUnmount() {
+  componentDidUpdate() {
     this.persistData(this.state.value)
   }
   render() {
