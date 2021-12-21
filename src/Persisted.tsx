@@ -17,9 +17,6 @@ export interface PersistedState<T> {
 }
 
 export class Persisted<T> extends React.Component<PersistedProps<T>, PersistedState<T>> {
-  subscriptions: Subscription[] = []
-  submitSubject = new Subject<T | Observable<T>>()
-  loadSubject = new Subject()
   getDataFromStorage = () => {
     let unparsed = null
     if (this.props.storage === 'sessionStorage') {
@@ -27,7 +24,7 @@ export class Persisted<T> extends React.Component<PersistedProps<T>, PersistedSt
     } else {
       unparsed = localStorage.getItem(this.props.storeKey)
     }
-    return unparsed && JSON.parse(unparsed)
+    return unparsed == null ? unparsed : JSON.parse(unparsed)
   }
   persistData = (value: T) => {
     if (this.props.storage === 'sessionStorage') {
