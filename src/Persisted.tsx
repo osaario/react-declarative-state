@@ -34,7 +34,7 @@ export class Persisted<T> extends React.Component<PersistedProps<T>, PersistedSt
   }
 
   state: PersistedState<T> = {
-    value: this.getDataFromStorage() || this.props.initialValue
+    value: this.getDataFromStorage() == null ? this.props.initialValue : this.getDataFromStorage()
   }
   setValue = (data: T) => {
     this.setState({ value: data })
