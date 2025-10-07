@@ -1,6 +1,6 @@
 {
   "name": "react-declarative-state",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "description": "Declarative State Components for React. Create asynchronous UI:s with ease.",
   "keywords": [
     "declarative",
@@ -13,7 +13,7 @@
   "module": "dist/react-declarative-state.es5.js",
   "typings": "dist/types/react-declarative-state.d.ts",
   "files": [
-    "dist"
+    "dist/**/*"
   ],
   "author": "osaario <osaario1@gmail.com>",
   "repository": {
@@ -34,6 +34,7 @@
     "test:prod": "npm run lint && npm run test -- --no-cache",
     "deploy-docs": "ts-node tools/gh-pages-publish",
     "report-coverage": "cat ./coverage/lcov.info | coveralls",
+    "prepare": "npm run build",
     "commit": "git-cz",
     "semantic-release": "semantic-release",
     "semantic-release-prepare": "ts-node tools/semantic-release-prepare",
@@ -127,8 +128,8 @@
     "travis-deploy-once": "^5.0.9"
   },
   "peerDependencies": {
-    "react": ">=16.6.0 <18",
-    "react-dom": ">=16.6.0 <18",
+    "react": ">=16.6.0 <=18",
+    "react-dom": ">=16.6.0 <=18",
     "rxjs": "^5.5.12"
   },
   "dependencies": {
